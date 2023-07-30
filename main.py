@@ -69,17 +69,14 @@ def scrap_data(soup:BeautifulSoup, nameCsv, progress_callback):
         
     i = 0
     while i < count:
-        tables = soup.find_all("table")
-        trs = tables[4].find_all("tr")
-        for tr in trs:
-            # !!!!!!!НЕПРАВИЛЬНО ИЩЕТ ССЫЛКУ!!!!!!
-            link = tr.find("a", class_="amopt")
-            if link is not None:
-                url = link.get("href")
-                print(url)
-            print("PASS")
+        div_d1_tags = soup.find_all('div', {'class': 'd1'})
+        for div_tag in div_d1_tags:
+            links = div_tag.find_all('a')
+            for link in links:
+                print(link['href'])
         i +=1
-    
+
+    print("TEST")
     with open(f"result/{nameCsv}.csv", "a", encoding="utf-8") as file:
         writer = csv.writer(file)
         writer.writerow(
