@@ -48,9 +48,9 @@ def get_start_pages():
 
     
 def check_sub_ctegory(soup:BeautifulSoup):
-    subCat = soup.finds_all("h4", class_="category")
+    subCat = soup.find_all("h4", class_="category")
     if len(subCat) > 0:
-        return True;
+        return True
     else:
         return False
     
@@ -184,7 +184,7 @@ def fill_data(link, nameCsv, selection):
     #     # phone = phone_td_1.text
     #     pass
     
-    phone = get_phone(url)
+    # phone = get_phone(url)
     
     with open(f"result/{nameCsv}.csv", "a", newline='', encoding="utf-8") as file:
         writer = csv.writer(file)
@@ -240,10 +240,10 @@ def scrap_data(soup:BeautifulSoup, nameCsv, selection, url, progress_callback):
                 
                 strs = lin.split("/")
                 
-                with open(f"data/{strs[9]}", "w", encoding="utf-8") as file:
+                with open(f"data/{strs[len(strs)-1]}", "w", encoding="utf-8") as file:
                     file.write(r.text)
                 
-                with open(f"data/{strs[9]}", encoding="utf-8") as file:
+                with open(f"data/{strs[len(strs)-1]}", encoding="utf-8") as file:
                     src = file.read()    
             
                 soup = BeautifulSoup(src, "lxml")
@@ -263,14 +263,6 @@ def scrap_data(soup:BeautifulSoup, nameCsv, selection, url, progress_callback):
             links = div_tag.find_all('a')
             for link in links:
                 fill_data(link['href'], nameCsv, selection)
-          
-        # Simulate some work
-    # for i in tqdm(range(100), desc="Scraping data", unit="item"):
-    #     # Your actual scraping logic here...
-    #     # ...
-    #
-    #     # Update progress
-    #     progress_callback((i + 1) / 100)
 
 
 def get_data(href:str, nameCsv, selection, progress_callback):
