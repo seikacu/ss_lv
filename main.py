@@ -3,6 +3,7 @@ import json
 import os
 import re
 import time
+import requests
 
 from tkinter import *
 from tkinter.ttk import Combobox, Progressbar 
@@ -11,8 +12,9 @@ from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from selenium.webdriver.common.by import By
 from bs4 import BeautifulSoup
-import requests
+from fake_useragent import UserAgent
 from tqdm import tqdm
 
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
@@ -20,7 +22,9 @@ USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTM
 
 def get_soup(mode, url, str):
     
-    headers = { "User-Agent": f"{USER_AGENT}" }
+    ua = UserAgent()
+    user_agent = ua.random
+    headers = { "User-Agent": f"{user_agent}" }
     
     fileName = ""
     
@@ -97,62 +101,105 @@ def check_sub_ctegory(soup:BeautifulSoup):
 
 def set_driver_options(options:webdriver.ChromeOptions):
     
-    options.add_argument(f'--user-agent={USER_AGENT}')
+    # options.add_argument(f'--user-agent={USER_AGENT}')
+    ua = UserAgent()
+    user_agent = ua.random
+    print(user_agent)
+    options.add_argument(f'--user-agent={user_agent}')
+    
+    options.add_argument('--ignore-certificate-errors')
+    options.add_argument('--ignore-ssl-errors')
+    
+    options.add_argument("--disable-blink-features")
+    options.add_argument("--disable-blink-features=AutomationControlled")
+    # options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    # options.add_experimental_option('useAutomationExtension', False)
+    options.add_argument("start-maximized")
+
         
-    options.add_argument('--no-sandbox')
-    options.add_argument("--disable-extensions")
+    # options.add_argument('--no-sandbox')
+    # options.add_argument("--disable-extensions")
     # options.add_argument("--headless")
     # options.add_argument(f"--proxy-server={auth}")
         
-    # options.debugger_address = 'localhost:8989'
+    options.debugger_address = 'localhost:8989'
+
+def get_selenium_driver():
+    
+    options = webdriver.ChromeOptions()
+    set_driver_options(options)
+    
+    caps = DesiredCapabilities().CHROME
+    # caps['pageLoadStrategy'] = 'eager'
+    caps['pageLoadStrategy'] = 'normal'
+        
+    service = Service(desired_capabilities=caps, executable_path=r"C:\WebDriver\chromedriver\chromedriver.exe")
+    driver = webdriver.Chrome(service=service, options=options)
+    return driver
+
+
+def extract_phone_numbers(driver:webdriver.Chrome):
+    phoneNumbers = ""
+    phone1 = ""
+    phone2 = ""
+    try:
+        phone1 = driver.find_element(By.XPATH, "//span[contains(@id, 'phone_td_1')]").text
+        phone2 = driver.find_element(By.XPATH, "//span[contains(@id, 'phone_td_2')]").text
+    except NoSuchElementException:
+        print(NoSuchElementException)
+        print("Не удалось получить телефоны")
+    phoneNumbers = f"{phone1};{phone2};"
+    return phoneNumbers
 
 
 def get_phone(url):
-    
+    phoneNumbers = ""
     try:
-        options = webdriver.ChromeOptions()
-
-        set_driver_options(options)
-        
-        caps = DesiredCapabilities().CHROME
-        # caps['pageLoadStrategy'] = 'eager'
-        caps['pageLoadStrategy'] = 'normal'
-        
-        service = Service(desired_capabilities=caps, executable_path=r"C:\WebDriver\chromedriver\chromedriver.exe")
-        driver = webdriver.Chrome(service=service, options=options)
-        
+        driver = get_selenium_driver()        
         driver.get(url)
         
         driver.maximize_window
+        
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         time.sleep(1)
-        showPhone = driver.find_element(By.XPATH, "//a[contains(@onclick, '_show_phone')]")
-        showPhone.click()
-        time.sleep(1)
-        # recaptcha_iframe = driver.find_element(By.XPATH, '//iframe[@title="reCAPTCHA"]')
-        # recaptcha_iframe.find_element(By.XPATH, '//textarea[@id="g-recaptcha-response"]')
-        # recaptcha_iframe.click()
+                
+        try:
+            showPhone = driver.find_element(By.XPATH, "//a[contains(@onclick, '_show_phone')]")
+            if showPhone.is_displayed():
+                showPhone.click()
+                time.sleep(3)
+            else:
+                print("The element showPhone is not visible.")
+        except NoSuchElementException:
+            print(NoSuchElementException)
+            print("Кнопка показать телефон не найдена")
         
-        str = url.split("/")
-        soup = get_soup(3, url, str)
-        
-        phone = ""
-        phone_td_1 = table.find("span", id="phone_td_1")
-        if phone_td_1:
-            phone = phone_td_1.text
-        
+        try:
+            recaptcha_iframe = driver.find_element(By.XPATH, '//iframe[@title="reCAPTCHA"]')
+            recaptcha_iframe.find_element(By.XPATH, '//textarea[@id="g-recaptcha-response"]')
+            recaptcha_iframe.click()
+            time.sleep(5)
+        except NoSuchElementException:
+            print(NoSuchElementException)
+            print("Капча не найдена")
+                 
+        phoneNumbers = extract_phone_numbers(driver)
+        if len(phoneNumbers) > 0:
+            phoneNumbers = phoneNumbers[:-1]
+            
         driver.quit()
     
-        return phone
+        return phoneNumbers
     except NoSuchElementException:
         print(NoSuchElementException)     
-        return ""      
+        return phoneNumbers
 
 
 def fill_data(link, nameCsv, selection):
     
     phone = ""
     email = ""
-    site = ""
+    # site = ""
     location = ""
     category = ""
     sub_category_1 = ""
@@ -166,7 +213,7 @@ def fill_data(link, nameCsv, selection):
     soup = get_soup(3, url, str)
         
     sels = selection.split("-")
-    category = sels[1].strip()
+    category = sels[1]
     
     links = soup.select('h2.headtitle a')
     arr_links = []
@@ -190,13 +237,8 @@ def fill_data(link, nameCsv, selection):
     if td_locate:
         next_td_locate = td_locate.find_next('td', class_='ads_contacts')
         if next_td_locate:
-            text = next_td_locate.get_text().strip()
-            location = text.replace(",", ".")
-    
-    # phone_td_1 = table.find("span", id="phone_td_1")
-    # if phone_td_1:
-    #     # phone = phone_td_1.text
-    #     pass
+            text = next_td_locate.get_text()
+            location = text
     
     phone = get_phone(url)
     
@@ -204,16 +246,16 @@ def fill_data(link, nameCsv, selection):
         writer = csv.writer(file)
         writer.writerow(
             (
-                phone,
-                email,
-                site,
-                location,
-                category,
-                sub_category_1,
-                sub_category_2,
-                sub_category_3,
-                sub_category_4,
-                sub_category_5
+                phone.replace(",", ";").strip(),
+                email.replace(",", ";").strip(),
+                # site.replace(",", ";").strip(),
+                location.replace(",", ";").strip(),
+                category.replace(",", ";").strip(),
+                sub_category_1.replace(",", ";").strip(),
+                sub_category_2.replace(",", ";").strip(),
+                sub_category_3.replace(",", ";").strip(),
+                sub_category_4.replace(",", ";").strip(),
+                sub_category_5.replace(",", ";").strip()
             )
         )
     
@@ -336,7 +378,7 @@ def window():
                 (
                     "phone",
                     "email",
-                    "site",
+                    # "site",
                     "location",
                     "category",
                     "sub_category_1",
