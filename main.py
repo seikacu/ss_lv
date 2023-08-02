@@ -4,27 +4,32 @@ import os
 import re
 import time
 import requests
+import random
+# import pickle
 
+from proxy_auth_data import login, password
 from tkinter import *
 from tkinter.ttk import Combobox, Progressbar 
 from datetime import datetime
-from selenium import webdriver
+# from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.common.by import By
+from seleniumwire import webdriver
 from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
 from tqdm import tqdm
+from multiprocessing import Pool
 
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
 
 
 def get_soup(mode, url, str):
     
-    ua = UserAgent()
-    user_agent = ua.random
-    headers = { "User-Agent": f"{user_agent}" }
+    # ua = UserAgent()
+    # user_agent = ua.random
+    headers = { "User-Agent": f"{USER_AGENT}" }
     
     fileName = ""
     
@@ -103,17 +108,17 @@ def set_driver_options(options:webdriver.ChromeOptions):
     
     # options.add_argument(f'--user-agent={USER_AGENT}')
     ua = UserAgent()
-    user_agent = ua.random
-    print(user_agent)
+    user_agent = ua.chrome
+    # print(user_agent)
     options.add_argument(f'--user-agent={user_agent}')
     
     options.add_argument('--ignore-certificate-errors')
     options.add_argument('--ignore-ssl-errors')
+    options.add_argument("--disable-proxy-certificate-handler")
     
-    options.add_argument("--disable-blink-features")
     options.add_argument("--disable-blink-features=AutomationControlled")
-    # options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    # options.add_experimental_option('useAutomationExtension', False)
+    
+    options.add_argument("user-data-dir=C:\\WebDriver\\chromedriver\\user")
     options.add_argument("start-maximized")
 
         
@@ -123,6 +128,9 @@ def set_driver_options(options:webdriver.ChromeOptions):
     # options.add_argument(f"--proxy-server={auth}")
         
     options.debugger_address = 'localhost:8989'
+    
+    # options.add_argument("--proxy-server=212.102.151.99:8000")
+    
 
 def get_selenium_driver():
     
@@ -132,9 +140,16 @@ def get_selenium_driver():
     caps = DesiredCapabilities().CHROME
     # caps['pageLoadStrategy'] = 'eager'
     caps['pageLoadStrategy'] = 'normal'
-        
+    
+    proxy_options = {
+        "proxy" : {
+            "https" : f"http://{login}:{password}@185.122.206.63:4515"
+        }
+    }
     service = Service(desired_capabilities=caps, executable_path=r"C:\WebDriver\chromedriver\chromedriver.exe")
-    driver = webdriver.Chrome(service=service, options=options)
+    # driver = webdriver.Chrome(service=service, options=options)
+    driver = webdriver.Chrome(service=service, options=options, seleniumwire_options=proxy_options)
+    # driver.get("https://2ip.ru/")
     return driver
 
 
@@ -161,13 +176,13 @@ def get_phone(url):
         driver.maximize_window
         
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        time.sleep(1)
+        time.sleep(random.randrange(1, 3))
                 
         try:
             showPhone = driver.find_element(By.XPATH, "//a[contains(@onclick, '_show_phone')]")
             if showPhone.is_displayed():
                 showPhone.click()
-                time.sleep(3)
+                time.sleep(random.randrange(3, 10))
             else:
                 print("The element showPhone is not visible.")
         except NoSuchElementException:
@@ -178,16 +193,18 @@ def get_phone(url):
             recaptcha_iframe = driver.find_element(By.XPATH, '//iframe[@title="reCAPTCHA"]')
             recaptcha_iframe.find_element(By.XPATH, '//textarea[@id="g-recaptcha-response"]')
             recaptcha_iframe.click()
-            time.sleep(5)
+            time.sleep(random.randrange(5, 10))
         except NoSuchElementException:
             print(NoSuchElementException)
             print("Капча не найдена")
                  
-        phoneNumbers = extract_phone_numbers(driver)
-        if len(phoneNumbers) > 0:
-            phoneNumbers = phoneNumbers[:-1]
-            
-        driver.quit()
+        phoneNumbers = extract_phone_numbers(driver)[:-1]
+        # if len(phoneNumbers) > 0:
+        #     phoneNumbers = phoneNumbers[:-1]
+        
+        # pickle.dump(driver.get_cookies, open("cokies", "wb"))
+        # driver.close()
+        # driver.quit()
     
         return phoneNumbers
     except NoSuchElementException:
