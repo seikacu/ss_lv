@@ -2,6 +2,7 @@ import csv
 import json
 import os
 import re
+import sys
 import time
 import requests
 import random
@@ -120,14 +121,24 @@ def set_driver_options(options:webdriver.ChromeOptions):
     
     options.add_argument("user-data-dir=C:\\WebDriver\\chromedriver\\user")
     options.add_argument("start-maximized")
+    options.add_argument('--headless')
 
-        
+
+    options.add_argument('--headless')
+    options.add_argument('--disable-gpu')
+    # options.add_argument('--remote-debugging-port=8989')
+    options.add_argument('--enable-javascript')
+    # options.add_argument("--user-agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:72.0) Gecko/20100101 Firefox/72.0'")
+    options.add_argument('--no-sandbox')
+    # options.add_argument('--ignore-certificate-errors')
+    options.add_argument('--allow-insecure-localhost')
+            
     # options.add_argument('--no-sandbox')
     # options.add_argument("--disable-extensions")
     # options.add_argument("--headless")
     # options.add_argument(f"--proxy-server={auth}")
         
-    options.debugger_address = 'localhost:8989'
+    # options.debugger_address = 'localhost:8989'
     
     # options.add_argument("--proxy-server=212.102.151.99:8000")
     
@@ -181,7 +192,8 @@ def get_phone(url):
         try:
             showPhone = driver.find_element(By.XPATH, "//a[contains(@onclick, '_show_phone')]")
             if showPhone.is_displayed():
-                showPhone.click()
+                # showPhone.click()
+                driver.execute_script("arguments[0].click();", showPhone)
                 time.sleep(random.randrange(3, 10))
             else:
                 print("The element showPhone is not visible.")
