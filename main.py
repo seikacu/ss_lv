@@ -6,6 +6,8 @@ import sys
 import time
 import requests
 import random
+import http.client
+import gzip
 # import pickle
 
 from proxy_auth_data import login, password
@@ -121,17 +123,17 @@ def set_driver_options(options:webdriver.ChromeOptions):
     
     options.add_argument("user-data-dir=C:\\WebDriver\\chromedriver\\user")
     options.add_argument("start-maximized")
-    options.add_argument('--headless')
+    # options.add_argument('--headless')
 
 
-    options.add_argument('--headless')
-    options.add_argument('--disable-gpu')
-    # options.add_argument('--remote-debugging-port=8989')
+    # options.add_argument('--headless')
+    # options.add_argument('--disable-gpu')
+    # # options.add_argument('--remote-debugging-port=8989')
     options.add_argument('--enable-javascript')
     # options.add_argument("--user-agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:72.0) Gecko/20100101 Firefox/72.0'")
-    options.add_argument('--no-sandbox')
+    # options.add_argument('--no-sandbox')
     # options.add_argument('--ignore-certificate-errors')
-    options.add_argument('--allow-insecure-localhost')
+    # options.add_argument('--allow-insecure-localhost')
             
     # options.add_argument('--no-sandbox')
     # options.add_argument("--disable-extensions")
@@ -186,6 +188,8 @@ def get_phone(url):
         
         driver.maximize_window
         
+        
+        
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         time.sleep(random.randrange(1, 3))
                 
@@ -193,6 +197,8 @@ def get_phone(url):
             showPhone = driver.find_element(By.XPATH, "//a[contains(@onclick, '_show_phone')]")
             if showPhone.is_displayed():
                 # showPhone.click()
+                new_onclick_value = "_show_phone(1,'',null);"
+                driver.execute_script("arguments[0].setAttribute('onclick', arguments[1]);", showPhone, new_onclick_value)
                 driver.execute_script("arguments[0].click();", showPhone)
                 time.sleep(random.randrange(3, 10))
             else:
@@ -456,12 +462,49 @@ def window():
     window.mainloop()
 
 
+def test():
+
+    cookies = {
+        'LG': 'ru',
+        'sid': '690797dfd93d29b221e4f580c6e91b778df5ef2f97e3f9837bc7fb4f6cd77efd583d8bdefb6228a5bce16df9f16023fe',
+        '_ga': 'GA1.2.1714425831.1690582726',
+        '__gads': 'ID=e478bd1281b7c0d7-22573a830fe30021:T=1690582785:RT=1691090915:S=ALNI_MaO1z8q5g7Xq7s7z51mVScrQXTgIA',
+        '__gpi': 'UID=00000d29fb330c2f:T=1690582785:RT=1691090915:S=ALNI_MZDmkpX3wmtaHC4z5Xe_eWsGtO6xA',
+        'PHPSESSID': 'd0d2eabc18fa09403a91a6f4fc9a3e9d',
+    }
+
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/116.0',
+        'Accept': 'message/x-ajax',
+        'Accept-Language': 'ru-RU,ru;q=0.8,en-US;q=0.5,en;q=0.3',
+        # 'Accept-Encoding': 'gzip, deflate, br',
+        'Connection': 'keep-alive',
+        'Referer': 'https://www.ss.lv/msg/ru/construction/garden-technics/hothouses/bmghxn.html',
+        # 'Cookie': 'LG=ru; sid=690797dfd93d29b221e4f580c6e91b778df5ef2f97e3f9837bc7fb4f6cd77efd583d8bdefb6228a5bce16df9f16023fe; _ga=GA1.2.1714425831.1690582726; __gads=ID=e478bd1281b7c0d7-22573a830fe30021:T=1690582785:RT=1691090915:S=ALNI_MaO1z8q5g7Xq7s7z51mVScrQXTgIA; __gpi=UID=00000d29fb330c2f:T=1690582785:RT=1691090915:S=ALNI_MZDmkpX3wmtaHC4z5Xe_eWsGtO6xA; PHPSESSID=d0d2eabc18fa09403a91a6f4fc9a3e9d',
+        'Sec-Fetch-Dest': 'empty',
+        'Sec-Fetch-Mode': 'cors',
+        'Sec-Fetch-Site': 'same-origin',
+        # Requests doesn't support trailers
+        # 'TE': 'trailers',
+    }
+
+    response = requests.get(
+        'https://www.ss.lv/js/ru/2022-10-04/e1a7846f3e4f02824c69f0e48b63a4b29ae3be2afbb13a976b291131943ad8fa.js?d=N1V1RdtC^%^2BPxWA1NhUTC^%^2BiQ0UJ^%^2FSpuqE^%^2Bnvk5oogs6YogluM64UBA5qf^%^2FFi^%^2FSr5Z6iXbqLVB7dU2KoBf016VsfevEmRxsFBZr0ITTtGZzkFZMom5jMYK4UlZt0BqOEWCpACXG25eHbfN0DjHiHjK5DHBEICh9MOOzuDojLsj60uki6WTLlbVN86qk8dL7UUrMyDvJF66AlG^%^2F6CjnWBzbdg33CmQj38agNTANQgfn1Q3WSB4n7dEGwmbD4VuBxoi^%^2B1duGvpNxNqCNlX6FfQPIhMos6YDn9ZYuNWxAdbBiwX66yyqHkH908tvR6YO9LQKcWdCbAFNAGmxaOqVBsYO88UeqQxRo735bnTwwRfSUICNHOnE2HkbWHOYYqls2kNAHL2rgQHpU5NHFHfERWb9KuJNmpsWsQfhhQ8Sa0xlxBXR7ILpZxsKJo6BCoDa^%^2BmkFlJGpjOMgaNNjHpj5j3BwRDlzmHuREykRM3NcjVaJ8Tth17JXr9n4HLG95TrYcbVfAB&c=1&x=870&y=571&code=nsk',
+        cookies=cookies,
+        headers=headers,
+    )
+    
+    with open(f"data/test.html", "w", encoding="utf-8") as file:
+        file.write(response.text)
+
+
+
 def main():
     
     print("start")
-    
     get_start_pages()
     window()
+    # test()
     
     print("end")
 
