@@ -6,6 +6,7 @@ import sys
 import time
 import requests
 import random
+import zipfile
 import http.client
 import gzip
 # import pickle
@@ -14,18 +15,71 @@ from proxy_auth_data import login, password
 from tkinter import *
 from tkinter.ttk import Combobox, Progressbar 
 from datetime import datetime
-# from selenium import webdriver
+from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.common.by import By
-from seleniumwire import webdriver
 from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
 from tqdm import tqdm
 from multiprocessing import Pool
 
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
+
+PROXY_HOST = '185.122.206.63'
+PROXY_PORT = '4515'
+PROXY_USER = login
+PROXY_PASS = password
+
+manifest_json = """
+{
+    "version": "1.0.0",
+    "manifest_version": 2,
+    "name": "Chrome Proxy",
+    "permissions": [
+        "proxy",
+        "tabs",
+        "unlimitedStorage",
+        "storage",
+        "<all_urls>",
+        "webRequest",
+        "webRequestBlocking"
+    ],
+    "background": {
+        "scripts": ["background.js"]
+    },
+    "minimum_chrome_version":"76.0.0"
+}
+"""
+
+background_js = """
+let config = {
+        mode: "fixed_servers",
+        rules: {
+        singleProxy: {
+            scheme: "http",
+            host: "%s",
+            port: parseInt(%s)
+        },
+        bypassList: ["localhost"]
+        }
+    };
+chrome.proxy.settings.set({value: config, scope: "regular"}, function() {});
+function callbackFn(details) {
+    return {
+        authCredentials: {
+            username: "%s",
+            password: "%s"
+        }
+    };
+}
+chrome.webRequest.onAuthRequired.addListener(
+            callbackFn,
+            {urls: ["<all_urls>"]},
+            ['blocking']
+);
+""" % (PROXY_HOST, PROXY_PORT, PROXY_USER, PROXY_PASS)
 
 
 def get_soup(mode, url, str):
@@ -109,60 +163,48 @@ def check_sub_ctegory(soup:BeautifulSoup):
 
 def set_driver_options(options:webdriver.ChromeOptions):
     
-    # options.add_argument(f'--user-agent={USER_AGENT}')
-    ua = UserAgent()
-    user_agent = ua.chrome
-    # print(user_agent)
-    options.add_argument(f'--user-agent={user_agent}')
-    
     options.add_argument('--ignore-certificate-errors')
     options.add_argument('--ignore-ssl-errors')
-    options.add_argument("--disable-proxy-certificate-handler")
-    
+    # options.add_argument("--disable-proxy-certificate-handler")
     options.add_argument("--disable-blink-features=AutomationControlled")
-    
     options.add_argument("user-data-dir=C:\\WebDriver\\chromedriver\\user")
     options.add_argument("start-maximized")
-    # options.add_argument('--headless')
-
-
     # options.add_argument('--headless')
     # options.add_argument('--disable-gpu')
     # # options.add_argument('--remote-debugging-port=8989')
     options.add_argument('--enable-javascript')
-    # options.add_argument("--user-agent='Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:72.0) Gecko/20100101 Firefox/72.0'")
-    # options.add_argument('--no-sandbox')
-    # options.add_argument('--ignore-certificate-errors')
+    options.add_argument('--no-sandbox')
     # options.add_argument('--allow-insecure-localhost')
-            
-    # options.add_argument('--no-sandbox')
     # options.add_argument("--disable-extensions")
-    # options.add_argument("--headless")
-    # options.add_argument(f"--proxy-server={auth}")
-        
     # options.debugger_address = 'localhost:8989'
     
-    # options.add_argument("--proxy-server=212.102.151.99:8000")
-    
 
-def get_selenium_driver():
+def get_selenium_driver(use_proxy=False, user_agent=None):
     
     options = webdriver.ChromeOptions()
     set_driver_options(options)
     
+    if use_proxy:
+        options.add_experimental_option('excludeSwitches', ['enable-logging'])
+        plugin_file = 'proxy_auth_plugin.zip'
+
+        with zipfile.ZipFile(plugin_file, 'w') as zp:
+            zp.writestr('manifest.json', manifest_json)
+            zp.writestr('background.js', background_js)
+        
+        options.add_extension(plugin_file)
+    
+    if user_agent:
+        # ua = UserAgent()
+        # user_agent = ua.chrome
+        options.add_argument(f'--user-agent={user_agent}')
+
     caps = DesiredCapabilities().CHROME
     # caps['pageLoadStrategy'] = 'eager'
     caps['pageLoadStrategy'] = 'normal'
     
-    proxy_options = {
-        "proxy" : {
-            "https" : f"http://{login}:{password}@185.122.206.63:4515"
-        }
-    }
     service = Service(desired_capabilities=caps, executable_path=r"C:\WebDriver\chromedriver\chromedriver.exe")
-    # driver = webdriver.Chrome(service=service, options=options)
-    driver = webdriver.Chrome(service=service, options=options, seleniumwire_options=proxy_options)
-    # driver.get("https://2ip.ru/")
+    driver = webdriver.Chrome(service=service, options=options)
     return driver
 
 
@@ -183,24 +225,23 @@ def extract_phone_numbers(driver:webdriver.Chrome):
 def get_phone(url):
     phoneNumbers = ""
     try:
-        driver = get_selenium_driver()        
+        driver = get_selenium_driver(use_proxy=True, user_agent=USER_AGENT)        
+        # driver.get('https://2ip.ru')
         driver.get(url)
         
         driver.maximize_window
         
-        
-        
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        time.sleep(random.randrange(1, 3))
+        # time.sleep(random.randrange(1, 3))
                 
         try:
             showPhone = driver.find_element(By.XPATH, "//a[contains(@onclick, '_show_phone')]")
             if showPhone.is_displayed():
                 # showPhone.click()
-                new_onclick_value = "_show_phone(1,'',null);"
-                driver.execute_script("arguments[0].setAttribute('onclick', arguments[1]);", showPhone, new_onclick_value)
+                # new_onclick_value = "_show_phone(1,'',null);"
+                # driver.execute_script("arguments[0].setAttribute('onclick', arguments[1]);", showPhone, new_onclick_value)
                 driver.execute_script("arguments[0].click();", showPhone)
-                time.sleep(random.randrange(3, 10))
+                # time.sleep(random.randrange(3, 6))
             else:
                 print("The element showPhone is not visible.")
         except NoSuchElementException:
@@ -211,14 +252,12 @@ def get_phone(url):
             recaptcha_iframe = driver.find_element(By.XPATH, '//iframe[@title="reCAPTCHA"]')
             recaptcha_iframe.find_element(By.XPATH, '//textarea[@id="g-recaptcha-response"]')
             recaptcha_iframe.click()
-            time.sleep(random.randrange(5, 10))
+            # time.sleep(random.randrange(5, 10))
         except NoSuchElementException:
             print(NoSuchElementException)
             print("Капча не найдена")
                  
         phoneNumbers = extract_phone_numbers(driver)[:-1]
-        # if len(phoneNumbers) > 0:
-        #     phoneNumbers = phoneNumbers[:-1]
         
         # pickle.dump(driver.get_cookies, open("cokies", "wb"))
         # driver.close()
@@ -267,7 +306,7 @@ def fill_data(link, nameCsv, selection):
         if i == 4:
             sub_category_5 = arr_links[4]
     
-    table = soup.find("div", id="tr_cont")
+    # table = soup.find("div", id="tr_cont")
     td_locate = soup.find('td', class_='ads_contacts_name', string=re.compile(r'место', re.IGNORECASE))
     if td_locate:
         next_td_locate = td_locate.find_next('td', class_='ads_contacts')
@@ -498,14 +537,12 @@ def test():
         file.write(response.text)
 
 
-
 def main():
     
     print("start")
     get_start_pages()
     window()
     # test()
-    
     print("end")
 
     
