@@ -130,7 +130,7 @@ def get_soup(mode, url, str):
 
 def get_start_pages():
     
-    url = "https://www.ss.lv/ru/"
+    url = "https://www.ss.com/ru/"
     str = url.split("/")
     soup = get_soup(1, url, str)
     
@@ -232,16 +232,16 @@ def get_phone(url):
         driver.maximize_window
         
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        # time.sleep(random.randrange(1, 3))
+        time.sleep(random.randrange(1, 2))
                 
         try:
             showPhone = driver.find_element(By.XPATH, "//a[contains(@onclick, '_show_phone')]")
             if showPhone.is_displayed():
                 # showPhone.click()
-                # new_onclick_value = "_show_phone(1,'',null);"
-                # driver.execute_script("arguments[0].setAttribute('onclick', arguments[1]);", showPhone, new_onclick_value)
+                new_onclick_value = "_show_phone(1,'',null);"
+                driver.execute_script("arguments[0].setAttribute('onclick', arguments[1]);", showPhone, new_onclick_value)
                 driver.execute_script("arguments[0].click();", showPhone)
-                # time.sleep(random.randrange(3, 6))
+                time.sleep(random.randrange(3, 4))
             else:
                 print("The element showPhone is not visible.")
         except NoSuchElementException:
@@ -252,7 +252,7 @@ def get_phone(url):
             recaptcha_iframe = driver.find_element(By.XPATH, '//iframe[@title="reCAPTCHA"]')
             recaptcha_iframe.find_element(By.XPATH, '//textarea[@id="g-recaptcha-response"]')
             recaptcha_iframe.click()
-            # time.sleep(random.randrange(5, 10))
+            time.sleep(random.randrange(3, 4))
         except NoSuchElementException:
             print(NoSuchElementException)
             print("Капча не найдена")
@@ -282,7 +282,7 @@ def fill_data(link, nameCsv, selection):
     sub_category_4 = ""
     sub_category_5 = ""
     
-    url = f"https://www.ss.lv{link}"
+    url = f"https://www.ss.com{link}"
     str = link.split("/")
     soup = get_soup(3, url, str)
         
@@ -382,7 +382,7 @@ def scrap_data(soup:BeautifulSoup, nameCsv, selection, url, progress_callback):
 
 def get_data(href:str, nameCsv, selection, progress_callback):
     
-    url = f"https://www.ss.lv{href}"
+    url = f"https://www.ss.com{href}"
     str = href.split("/")
     soup = get_soup(2, url, str)
       
@@ -536,6 +536,11 @@ def test():
     with open(f"data/test.html", "w", encoding="utf-8") as file:
         file.write(response.text)
 
+def test_2():
+    url = "https://www.ss.lv/js/ru/2023-07-21/5d448e531eb26e5cd978fab3b399bf72af7f39f63ec80ce0b20cba336198f91e.js?d=https//www.ss.lv/msg/ru/transport/cars/volkswagen/tiguan/mfbhk.html"
+    response = requests.get(url)
+    response.json
+    print(response.content)
 
 def main():
     
@@ -543,6 +548,7 @@ def main():
     get_start_pages()
     window()
     # test()
+    # test_2()
     print("end")
 
     
