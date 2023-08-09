@@ -20,6 +20,10 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
+
 from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
 from tqdm import tqdm
@@ -204,12 +208,27 @@ def get_selenium_driver(use_proxy=False, user_agent=None):
     # # caps['pageLoadStrategy'] = 'eager'
     # caps['pageLoadStrategy'] = 'normal'
     
-    service = Service(desired_capabilities=caps, executable_path=r"C:\WebDriver\chromedriver\chromedriver.exe")
-    driver = webdriver.Chrome(service=service, options=options)
+    # dcap = dict(DesiredCapabilities.PHANTOMJS)
+    # dcap["phantomjs.page.settings.userAgent"] = (
+    #         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+    #     )
+    
+    # service = Service(desired_capabilities=caps, executable_path=r"C:\WebDriver\chromedriver\chromedriver.exe")
+    # driver = webdriver.Chrome(service=service, options=options)
+    
+    dcap = dict (DesiredCapabilities.PHANTOMJS) #setuserAgent
+    dcap["phantomjs.page.settings.userAgent"] = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10.9; rv:25.0) Gecko/20100101 Firefox/25.0 ")
+    
+    # Путь к исполняемому файлу PhantomJS
+    phantomjs_path = r'C:\WebDriver\PhantomJS\phantomjs'
+
+    # Создание объекта драйвера PhantomJS
+    driver = webdriver.PhantomJS(executable_path=phantomjs_path, desired_capabilities=dcap)
+
     return driver
 
 
-def extract_phone_numbers(driver:webdriver.Chrome):
+def extract_phone_numbers(driver:webdriver.PhantomJS):
     phoneNumbers = ""
     phone1 = ""
     phone2 = ""
@@ -229,22 +248,56 @@ def get_phone(url):
         driver = get_selenium_driver(use_proxy=True, user_agent=USER_AGENT)        
         # driver.get('https://2ip.ru')
         driver.get(url)
+ 
+        with open("page.html", "w", encoding="utf-8") as f:
+            f.write(driver.page_source)
+                
+        # driver.maximize_window
         
-        driver.maximize_window
-        
-        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        time.sleep(random.randrange(1, 2))
+        driver.save_screenshot("1.png")
+  
+        # driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        # time.sleep(random.randrange(1, 2))
                 
         try:
-            showPhone = driver.find_element(By.XPATH, "//a[contains(@onclick, '_show_phone')]")
-            if showPhone.is_displayed():
+            
+                # Найти элемент с id="phdivz_1"
+            element = driver.find_element_by_id('phdivz_1')
+            
+            # Изменить значение атрибута style на "display:true;"
+            driver.execute_script("arguments[0].style.display = 'false';", element)
+                    
+            
+            # # Дождаться появления блока с подтверждением cookie
+            # cookie_confirm_div = WebDriverWait(driver, 10).until(
+            #     EC.presence_of_element_located((By.ID, 'cookie_confirm_dv'))
+            # )
+
+            # # Найти кнопку "Принять и продолжить" внутри блока с подтверждением
+            # accept_button = cookie_confirm_div.find_element(By.XPATH, './/button[contains(text(), "Принять и продолжить")]')
+
+            # # Нажать на кнопку "Принять и продолжить"
+            # accept_button.click()
+            
+            driver.save_screenshot("2.png")
+            # driver.refresh
+            # driver.save_screenshot("3.png")
+            
+            # showPhone = driver.find_element(By.XPATH, "//a[contains(@onclick, '_show_phone')]")
+            showPhone = driver.find_element_by_xpath("//a[contains(@onclick, '_show_phone')]")
+            # if showPhone.is_displayed():
                 # showPhone.click()
-                new_onclick_value = "_show_phone(1,'',null);"
-                driver.execute_script("arguments[0].setAttribute('onclick', arguments[1]);", showPhone, new_onclick_value)
-                driver.execute_script("arguments[0].click();", showPhone)
-                time.sleep(random.randrange(3, 4))
-            else:
-                print("The element showPhone is not visible.")
+            new_onclick_value = "_show_phone(1,'',null);"
+            driver.execute_script("arguments[0].setAttribute('onclick', arguments[1]);", showPhone, new_onclick_value)
+            driver.execute_script("arguments[0].click();", showPhone)
+            driver.save_screenshot("3.png")
+            with open("captcha.html", "w", encoding="utf-8") as f:
+                f.write(driver.page_source)
+
+            
+            time.sleep(random.randrange(3, 4))
+            # else:
+            # print("The element showPhone is not visible.")
         except NoSuchElementException:
             print(NoSuchElementException)
             print("Кнопка показать телефон не найдена")
@@ -253,6 +306,7 @@ def get_phone(url):
             recaptcha_iframe = driver.find_element(By.XPATH, '//iframe[@title="reCAPTCHA"]')
             recaptcha_iframe.find_element(By.XPATH, '//textarea[@id="g-recaptcha-response"]')
             recaptcha_iframe.click()
+            driver.save_screenshot("4.png")
             time.sleep(random.randrange(3, 4))
         except NoSuchElementException:
             print(NoSuchElementException)
@@ -542,12 +596,27 @@ def test_2():
     response = requests.get(url)
     response.json
     print(response.content)
+    
+    
+def test_3():
+    # Путь к исполняемому файлу PhantomJS
+    phantomjs_path = r'C:\WebDriver\PhantomJS\phantomjs'
+
+    # Создание объекта драйвера PhantomJS
+    driver = webdriver.PhantomJS(executable_path=phantomjs_path)
+
+    # Открытие страницы Google
+    driver.get('https://www.google.com')
+
+    # Закрытие браузера
+    driver.quit()
 
 def main():
     
     print("start")
     get_start_pages()
     window()
+    # test_3()
     # test()
     # test_2()
     print("end")
