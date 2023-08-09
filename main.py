@@ -182,27 +182,27 @@ def set_driver_options(options:webdriver.ChromeOptions):
 
 def get_selenium_driver(use_proxy=False, user_agent=None):
     
-    options = webdriver.ChromeOptions()
-    set_driver_options(options)
+    # options = webdriver.ChromeOptions()
+    # set_driver_options(options)
     
-    if use_proxy:
-        options.add_experimental_option('excludeSwitches', ['enable-logging'])
-        plugin_file = 'proxy_auth_plugin.zip'
+    # if use_proxy:
+    #     options.add_experimental_option('excludeSwitches', ['enable-logging'])
+    #     plugin_file = 'proxy_auth_plugin.zip'
 
-        with zipfile.ZipFile(plugin_file, 'w') as zp:
-            zp.writestr('manifest.json', manifest_json)
-            zp.writestr('background.js', background_js)
+    #     with zipfile.ZipFile(plugin_file, 'w') as zp:
+    #         zp.writestr('manifest.json', manifest_json)
+    #         zp.writestr('background.js', background_js)
         
-        options.add_extension(plugin_file)
+    #     options.add_extension(plugin_file)
     
-    if user_agent:
-        # ua = UserAgent()
-        # user_agent = ua.chrome
-        options.add_argument(f'--user-agent={user_agent}')
+    # if user_agent:
+    #     # ua = UserAgent()
+    #     # user_agent = ua.chrome
+    #     options.add_argument(f'--user-agent={user_agent}')
 
-    caps = DesiredCapabilities().CHROME
-    # caps['pageLoadStrategy'] = 'eager'
-    caps['pageLoadStrategy'] = 'normal'
+    # caps = DesiredCapabilities().CHROME
+    # # caps['pageLoadStrategy'] = 'eager'
+    # caps['pageLoadStrategy'] = 'normal'
     
     service = Service(desired_capabilities=caps, executable_path=r"C:\WebDriver\chromedriver\chromedriver.exe")
     driver = webdriver.Chrome(service=service, options=options)
