@@ -20,8 +20,8 @@ from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+# from selenium.webdriver.support.ui import WebDriverWait
+# from selenium.webdriver.support import expected_conditions as EC
 
 
 from bs4 import BeautifulSoup
@@ -168,17 +168,18 @@ def check_sub_ctegory(soup:BeautifulSoup):
 
 def set_driver_options(options:webdriver.ChromeOptions):
     
+    # options.add_experimental_option("excludeSwitches",["ignore-certificate-errors"])
     options.add_argument('--ignore-certificate-errors')
     options.add_argument('--ignore-ssl-errors')
     # options.add_argument("--disable-proxy-certificate-handler")
     options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_argument("user-data-dir=C:\\WebDriver\\chromedriver\\user")
-    options.add_argument("start-maximized")
-    # options.add_argument('--headless')
+    # options.add_argument("start-maximzed")
+    options.add_argument('--headless=new')
     # options.add_argument('--disable-gpu')
     # # options.add_argument('--remote-debugging-port=8989')
-    options.add_argument('--enable-javascript')
-    options.add_argument('--no-sandbox')
+    # options.add_argument('--enable-javascript')
+    # options.add_argument('--no-sandbox')
     # options.add_argument('--allow-insecure-localhost')
     # options.add_argument("--disable-extensions")
     # options.debugger_address = 'localhost:8989'
@@ -186,49 +187,49 @@ def set_driver_options(options:webdriver.ChromeOptions):
 
 def get_selenium_driver(use_proxy=False, user_agent=None):
     
-    # options = webdriver.ChromeOptions()
-    # set_driver_options(options)
+    options = webdriver.ChromeOptions()
+    set_driver_options(options)
     
-    # if use_proxy:
-    #     options.add_experimental_option('excludeSwitches', ['enable-logging'])
-    #     plugin_file = 'proxy_auth_plugin.zip'
+    if use_proxy:
+        options.add_experimental_option('excludeSwitches', ['enable-logging'])
+        plugin_file = 'proxy_auth_plugin.zip'
 
-    #     with zipfile.ZipFile(plugin_file, 'w') as zp:
-    #         zp.writestr('manifest.json', manifest_json)
-    #         zp.writestr('background.js', background_js)
+        with zipfile.ZipFile(plugin_file, 'w') as zp:
+            zp.writestr('manifest.json', manifest_json)
+            zp.writestr('background.js', background_js)
         
-    #     options.add_extension(plugin_file)
+        options.add_extension(plugin_file)
     
-    # if user_agent:
-    #     # ua = UserAgent()
-    #     # user_agent = ua.chrome
-    #     options.add_argument(f'--user-agent={user_agent}')
+    if user_agent:
+        # ua = UserAgent()
+        # user_agent = ua.chrome
+        options.add_argument(f'--user-agent={user_agent}')
 
-    # caps = DesiredCapabilities().CHROME
-    # # caps['pageLoadStrategy'] = 'eager'
-    # caps['pageLoadStrategy'] = 'normal'
+    caps = DesiredCapabilities().CHROME
+    # caps['pageLoadStrategy'] = 'eager'
+    caps['pageLoadStrategy'] = 'normal'
     
     # dcap = dict(DesiredCapabilities.PHANTOMJS)
     # dcap["phantomjs.page.settings.userAgent"] = (
     #         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
     #     )
     
-    # service = Service(desired_capabilities=caps, executable_path=r"C:\WebDriver\chromedriver\chromedriver.exe")
-    # driver = webdriver.Chrome(service=service, options=options)
+    service = Service(desired_capabilities=caps, executable_path=r"C:\WebDriver\chromedriver\chromedriver.exe")
+    driver = webdriver.Chrome(service=service, options=options)
     
-    dcap = dict (DesiredCapabilities.PHANTOMJS) #setuserAgent
-    dcap["phantomjs.page.settings.userAgent"] = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10.9; rv:25.0) Gecko/20100101 Firefox/25.0 ")
+    # dcap = dict (DesiredCapabilities.PHANTOMJS) #setuserAgent
+    # dcap["phantomjs.page.settings.userAgent"] = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10.9; rv:25.0) Gecko/20100101 Firefox/25.0 ")
     
-    # Путь к исполняемому файлу PhantomJS
-    phantomjs_path = r'C:\WebDriver\PhantomJS\phantomjs'
+    # # Путь к исполняемому файлу PhantomJS
+    # phantomjs_path = r'C:\WebDriver\PhantomJS\phantomjs'
 
-    # Создание объекта драйвера PhantomJS
-    driver = webdriver.PhantomJS(executable_path=phantomjs_path, desired_capabilities=dcap)
+    # # Создание объекта драйвера PhantomJS
+    # driver = webdriver.PhantomJS(executable_path=phantomjs_path, desired_capabilities=dcap)
 
     return driver
 
 
-def extract_phone_numbers(driver:webdriver.PhantomJS):
+def extract_phone_numbers(driver:webdriver.Chrome):
     phoneNumbers = ""
     phone1 = ""
     phone2 = ""
@@ -254,20 +255,14 @@ def get_phone(url):
                 
         # driver.maximize_window
         
-        driver.save_screenshot("1.png")
+        # driver.save_screenshot("1.png")
   
-        # driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         # time.sleep(random.randrange(1, 2))
-                
+        # driver.save_screenshot("2.png")
+                        
         try:
-            
-                # Найти элемент с id="phdivz_1"
-            element = driver.find_element_by_id('phdivz_1')
-            
-            # Изменить значение атрибута style на "display:true;"
-            driver.execute_script("arguments[0].style.display = 'false';", element)
                     
-            
             # # Дождаться появления блока с подтверждением cookie
             # cookie_confirm_div = WebDriverWait(driver, 10).until(
             #     EC.presence_of_element_located((By.ID, 'cookie_confirm_dv'))
@@ -278,19 +273,26 @@ def get_phone(url):
 
             # # Нажать на кнопку "Принять и продолжить"
             # accept_button.click()
+
+            # Найти элемент с id="phdivz_1"
+            # element = driver.find_element_by_id('phdivz_1')
             
-            driver.save_screenshot("2.png")
+            # Изменить значение атрибута style на "display:true;"
+            # driver.execute_script("arguments[0].style.display = 'false';", element)
+            
+            # driver.save_screenshot("3.png")
             # driver.refresh
             # driver.save_screenshot("3.png")
             
-            # showPhone = driver.find_element(By.XPATH, "//a[contains(@onclick, '_show_phone')]")
-            showPhone = driver.find_element_by_xpath("//a[contains(@onclick, '_show_phone')]")
+            showPhone = driver.find_element(By.XPATH, "//a[contains(@onclick, '_show_phone')]")
+            # showPhone = driver.find_element_by_xpath("//a[contains(@onclick, '_show_phone')]")
             # if showPhone.is_displayed():
                 # showPhone.click()
-            new_onclick_value = "_show_phone(1,'',null);"
-            driver.execute_script("arguments[0].setAttribute('onclick', arguments[1]);", showPhone, new_onclick_value)
+            # new_onclick_value = "_show_phone(1,'',null);"
+            # driver.execute_script("arguments[0].setAttribute('onclick', arguments[1]);", showPhone, new_onclick_value)
             driver.execute_script("arguments[0].click();", showPhone)
-            driver.save_screenshot("3.png")
+            
+            driver.save_screenshot("4.png")
             with open("captcha.html", "w", encoding="utf-8") as f:
                 f.write(driver.page_source)
 
@@ -599,16 +601,13 @@ def test_2():
     
     
 def test_3():
-    # Путь к исполняемому файлу PhantomJS
+
     phantomjs_path = r'C:\WebDriver\PhantomJS\phantomjs'
 
-    # Создание объекта драйвера PhantomJS
     driver = webdriver.PhantomJS(executable_path=phantomjs_path)
 
-    # Открытие страницы Google
     driver.get('https://www.google.com')
 
-    # Закрытие браузера
     driver.quit()
 
 def main():
