@@ -15,11 +15,13 @@ from proxy_auth_data import login, password
 from tkinter import *
 from tkinter.ttk import Combobox, Progressbar 
 from datetime import datetime
+from ffmpeg import FFmpeg, Progress
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.common.by import By
+from selenium_recaptcha_solver import RecaptchaSolver
 # from selenium.webdriver.support.ui import WebDriverWait
 # from selenium.webdriver.support import expected_conditions as EC
 
@@ -135,7 +137,7 @@ def get_soup(mode, url, str):
 
 def get_start_pages():
     
-    url = "https://www.ss.com/ru/"
+    url = "https://www.ss.lv/ru/"
     str = url.split("/")
     soup = get_soup(1, url, str)
     
@@ -175,6 +177,7 @@ def set_driver_options(options:webdriver.ChromeOptions):
     options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_argument("user-data-dir=C:\\WebDriver\\chromedriver\\user")
     # options.add_argument("start-maximzed")
+    options.add_argument("--window-size=1920,1080")
     options.add_argument('--headless=new')
     # options.add_argument('--disable-gpu')
     # # options.add_argument('--remote-debugging-port=8989')
@@ -248,37 +251,38 @@ def get_phone(url):
     try:
         driver = get_selenium_driver(use_proxy=True, user_agent=USER_AGENT)        
         # driver.get('https://2ip.ru')
+        solver = RecaptchaSolver(driver=driver)
         driver.get(url)
- 
+        # driver.save_screenshot("1.png")
+        # driver.execute_cdp_cmd('Page.addScriptToEvaluateOnNewDocument', {'source': 'alert("Hooray! I did it!")'})
+        # driver.save_screenshot("2.png")
+        # driver.refresh
         with open("page.html", "w", encoding="utf-8") as f:
             f.write(driver.page_source)
+        driver.save_screenshot("3.png")
                 
         # driver.maximize_window
         
-        # driver.save_screenshot("1.png")
-  
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         # time.sleep(random.randrange(1, 2))
-        # driver.save_screenshot("2.png")
-                        
-        try:
-                    
-            # # Дождаться появления блока с подтверждением cookie
-            # cookie_confirm_div = WebDriverWait(driver, 10).until(
-            #     EC.presence_of_element_located((By.ID, 'cookie_confirm_dv'))
-            # )
-
-            # # Найти кнопку "Принять и продолжить" внутри блока с подтверждением
-            # accept_button = cookie_confirm_div.find_element(By.XPATH, './/button[contains(text(), "Принять и продолжить")]')
-
-            # # Нажать на кнопку "Принять и продолжить"
-            # accept_button.click()
-
-            # Найти элемент с id="phdivz_1"
-            # element = driver.find_element_by_id('phdivz_1')
+        driver.save_screenshot("4.png")
             
-            # Изменить значение атрибута style на "display:true;"
-            # driver.execute_script("arguments[0].style.display = 'false';", element)
+        try:
+            cookie_confirm_div = driver.find_element(By.ID, 'cookie_confirm_dv')
+            accept_button = cookie_confirm_div.find_element(By.XPATH, './/button[contains(text(), "Принять и продолжить")]')
+            accept_button.click()           
+        except NoSuchElementException:
+            # print(NoSuchElementException)
+            print("Кнопка Принять и продолжить не найдена")
+
+        try:
+            driver.save_screenshot("5.png")
+            # Найти элемент с id="phdivz_1"
+            element = driver.find_element(By.ID, 'phdivz_1')
+            if element.is_displayed() == False:
+                # Изменить значение атрибута style на "display:true;"
+                driver.execute_script("arguments[0].style.display = 'false';", element)
+            driver.save_screenshot("6.png")
             
             # driver.save_screenshot("3.png")
             # driver.refresh
@@ -292,7 +296,7 @@ def get_phone(url):
             # driver.execute_script("arguments[0].setAttribute('onclick', arguments[1]);", showPhone, new_onclick_value)
             driver.execute_script("arguments[0].click();", showPhone)
             
-            driver.save_screenshot("4.png")
+            driver.save_screenshot("7.png")
             with open("captcha.html", "w", encoding="utf-8") as f:
                 f.write(driver.page_source)
 
@@ -306,9 +310,10 @@ def get_phone(url):
         
         try:
             recaptcha_iframe = driver.find_element(By.XPATH, '//iframe[@title="reCAPTCHA"]')
-            recaptcha_iframe.find_element(By.XPATH, '//textarea[@id="g-recaptcha-response"]')
-            recaptcha_iframe.click()
-            driver.save_screenshot("4.png")
+            solver.click_recaptcha_v2(iframe=recaptcha_iframe)
+            # recaptcha_iframe.find_element(By.XPATH, '//textarea[@id="g-recaptcha-response"]')
+            # recaptcha_iframe.click()
+            driver.save_screenshot("8.png")
             time.sleep(random.randrange(3, 4))
         except NoSuchElementException:
             print(NoSuchElementException)
@@ -339,7 +344,7 @@ def fill_data(link, nameCsv, selection):
     sub_category_4 = ""
     sub_category_5 = ""
     
-    url = f"https://www.ss.com{link}"
+    url = f"https://www.ss.lv{link}"
     str = link.split("/")
     soup = get_soup(3, url, str)
         
@@ -439,7 +444,7 @@ def scrap_data(soup:BeautifulSoup, nameCsv, selection, url, progress_callback):
 
 def get_data(href:str, nameCsv, selection, progress_callback):
     
-    url = f"https://www.ss.com{href}"
+    url = f"https://www.ss.lv{href}"
     str = href.split("/")
     soup = get_soup(2, url, str)
       
