@@ -15,7 +15,6 @@ from proxy_auth_data import login, password
 from tkinter import *
 from tkinter.ttk import Combobox, Progressbar 
 from datetime import datetime
-from ffmpeg import FFmpeg, Progress
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.chrome.service import Service
@@ -178,7 +177,7 @@ def set_driver_options(options:webdriver.ChromeOptions):
     options.add_argument("user-data-dir=C:\\WebDriver\\chromedriver\\user")
     # options.add_argument("start-maximzed")
     options.add_argument("--window-size=1920,1080")
-    options.add_argument('--headless=new')
+    #options.add_argument('--headless=new')
     # options.add_argument('--disable-gpu')
     # # options.add_argument('--remote-debugging-port=8989')
     # options.add_argument('--enable-javascript')
@@ -310,9 +309,10 @@ def get_phone(url):
         
         try:
             recaptcha_iframe = driver.find_element(By.XPATH, '//iframe[@title="reCAPTCHA"]')
+            recaptcha_iframe.find_element(By.XPATH, '//textarea[@id="g-recaptcha-response"]')
+            recaptcha_iframe.click()
+            recaptcha_iframe = driver.find_element(By.XPATH, '//iframe[@title="reCAPTCHA"]')
             solver.click_recaptcha_v2(iframe=recaptcha_iframe)
-            # recaptcha_iframe.find_element(By.XPATH, '//textarea[@id="g-recaptcha-response"]')
-            # recaptcha_iframe.click()
             driver.save_screenshot("8.png")
             time.sleep(random.randrange(3, 4))
         except NoSuchElementException:
