@@ -21,6 +21,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.common.by import By
 from selenium_recaptcha_solver import RecaptchaSolver
+from seleniumwire import undetected_chromedriver as uc
 # from selenium.webdriver.support.ui import WebDriverWait
 # from selenium.webdriver.support import expected_conditions as EC
 
@@ -167,7 +168,7 @@ def check_sub_ctegory(soup:BeautifulSoup):
         return False
     
 
-def set_driver_options(options:webdriver.ChromeOptions):
+def set_driver_options(options:uc.ChromeOptions):
     
     # options.add_experimental_option("excludeSwitches",["ignore-certificate-errors"])
     options.add_argument('--ignore-certificate-errors')
@@ -176,10 +177,11 @@ def set_driver_options(options:webdriver.ChromeOptions):
     options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_argument("user-data-dir=C:\\WebDriver\\chromedriver\\user")
     # options.add_argument("start-maximzed")
-    options.add_argument("--window-size=1920,1080")
-    #options.add_argument('--headless=new')
+    # options.add_argument("--window-size=1920,1080")
+    options.add_argument("--start-maximized")
+    # options.add_argument('--headless=new')
     # options.add_argument('--disable-gpu')
-    # # options.add_argument('--remote-debugging-port=8989')
+    # options.add_argument('--remote-debugging-port=8989')
     # options.add_argument('--enable-javascript')
     # options.add_argument('--no-sandbox')
     # options.add_argument('--allow-insecure-localhost')
@@ -189,7 +191,8 @@ def set_driver_options(options:webdriver.ChromeOptions):
 
 def get_selenium_driver(use_proxy=False, user_agent=None):
     
-    options = webdriver.ChromeOptions()
+    options = uc.ChromeOptions()
+    # options = webdriver.ChromeOptions()
     set_driver_options(options)
     
     if use_proxy:
@@ -217,8 +220,8 @@ def get_selenium_driver(use_proxy=False, user_agent=None):
     #     )
     
     service = Service(desired_capabilities=caps, executable_path=r"C:\WebDriver\chromedriver\chromedriver.exe")
-    driver = webdriver.Chrome(service=service, options=options)
-    
+    driver = uc.Chrome(version_main=109, service=service, options=options) # 
+        
     # dcap = dict (DesiredCapabilities.PHANTOMJS) #setuserAgent
     # dcap["phantomjs.page.settings.userAgent"] = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10.9; rv:25.0) Gecko/20100101 Firefox/25.0 ")
     
@@ -239,8 +242,9 @@ def extract_phone_numbers(driver:webdriver.Chrome):
         phone1 = driver.find_element(By.XPATH, "//span[contains(@id, 'phone_td_1')]").text
         phone2 = driver.find_element(By.XPATH, "//span[contains(@id, 'phone_td_2')]").text
     except NoSuchElementException:
-        print(NoSuchElementException)
-        print("Не удалось получить телефоны")
+        # print(NoSuchElementException)
+        # print("Не удалось получить телефоны")
+        pass
     phoneNumbers = f"{phone1};{phone2};"
     return phoneNumbers
 
@@ -248,7 +252,7 @@ def extract_phone_numbers(driver:webdriver.Chrome):
 def get_phone(url):
     phoneNumbers = ""
     try:
-        driver = get_selenium_driver(use_proxy=True, user_agent=USER_AGENT)        
+        driver = get_selenium_driver(use_proxy=False, user_agent=USER_AGENT)        
         # driver.get('https://2ip.ru')
         solver = RecaptchaSolver(driver=driver)
         driver.get(url)
@@ -256,32 +260,36 @@ def get_phone(url):
         # driver.execute_cdp_cmd('Page.addScriptToEvaluateOnNewDocument', {'source': 'alert("Hooray! I did it!")'})
         # driver.save_screenshot("2.png")
         # driver.refresh
-        with open("page.html", "w", encoding="utf-8") as f:
-            f.write(driver.page_source)
-        driver.save_screenshot("3.png")
-                
-        # driver.maximize_window
         
+        # with open("page.html", "w", encoding="utf-8") as f:
+        #     f.write(driver.page_source)
+        # driver.save_screenshot("3.png")
+                
+        time.sleep(random.randrange(1, 3))
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        time.sleep(random.randrange(1, 3))
         # time.sleep(random.randrange(1, 2))
-        driver.save_screenshot("4.png")
-            
+        # driver.save_screenshot("4.png")
         try:
             cookie_confirm_div = driver.find_element(By.ID, 'cookie_confirm_dv')
             accept_button = cookie_confirm_div.find_element(By.XPATH, './/button[contains(text(), "Принять и продолжить")]')
-            accept_button.click()           
+            accept_button.click()
+            time.sleep(random.randrange(1, 3))
         except NoSuchElementException:
+            pass
             # print(NoSuchElementException)
-            print("Кнопка Принять и продолжить не найдена")
+            # print("Кнопка Принять и продолжить не найдена")
 
         try:
-            driver.save_screenshot("5.png")
+            # driver.save_screenshot("5.png")
             # Найти элемент с id="phdivz_1"
             element = driver.find_element(By.ID, 'phdivz_1')
             if element.is_displayed() == False:
                 # Изменить значение атрибута style на "display:true;"
                 driver.execute_script("arguments[0].style.display = 'false';", element)
-            driver.save_screenshot("6.png")
+                time.sleep(random.randrange(1, 3))
+
+            # driver.save_screenshot("6.png")
             
             # driver.save_screenshot("3.png")
             # driver.refresh
@@ -289,35 +297,47 @@ def get_phone(url):
             
             showPhone = driver.find_element(By.XPATH, "//a[contains(@onclick, '_show_phone')]")
             # showPhone = driver.find_element_by_xpath("//a[contains(@onclick, '_show_phone')]")
-            # if showPhone.is_displayed():
+            if showPhone.is_displayed():
+                driver.execute_script("arguments[0].click();", showPhone)
+                time.sleep(random.randrange(3, 6))
                 # showPhone.click()
             # new_onclick_value = "_show_phone(1,'',null);"
             # driver.execute_script("arguments[0].setAttribute('onclick', arguments[1]);", showPhone, new_onclick_value)
-            driver.execute_script("arguments[0].click();", showPhone)
+            # driver.execute_script("arguments[0].click();", showPhone)
             
-            driver.save_screenshot("7.png")
-            with open("captcha.html", "w", encoding="utf-8") as f:
-                f.write(driver.page_source)
+            # driver.save_screenshot("7.png")
+            # with open("captcha.html", "w", encoding="utf-8") as f:
+            #     f.write(driver.page_source)
 
             
-            time.sleep(random.randrange(3, 4))
             # else:
             # print("The element showPhone is not visible.")
         except NoSuchElementException:
-            print(NoSuchElementException)
+            # print(NoSuchElementException)
             print("Кнопка показать телефон не найдена")
         
         try:
             recaptcha_iframe = driver.find_element(By.XPATH, '//iframe[@title="reCAPTCHA"]')
             recaptcha_iframe.find_element(By.XPATH, '//textarea[@id="g-recaptcha-response"]')
             recaptcha_iframe.click()
-            recaptcha_iframe = driver.find_element(By.XPATH, '//iframe[@title="reCAPTCHA"]')
-            solver.click_recaptcha_v2(iframe=recaptcha_iframe)
-            driver.save_screenshot("8.png")
-            time.sleep(random.randrange(3, 4))
+            time.sleep(random.randrange(3, 6))            
+            showPhone = driver.find_element(By.XPATH, "//a[contains(@onclick, '_show_phone')]")
+            # showPhone = driver.find_element_by_xpath("//a[contains(@onclick, '_show_phone')]")
+            try:
+                if showPhone.is_displayed():
+                    recaptcha_iframe = driver.find_element(By.XPATH, '//iframe[@title="reCAPTCHA"]')
+                    solver.click_recaptcha_v2(iframe=recaptcha_iframe)
+            except:
+                # print(selenium_recaptcha_solver.exceptions.RecaptchaException)
+                print("ОШИБКА РЕШАТЕЛЯ КАПЧИ!!!")
+                time.sleep(random.randrange(30, 60))
+                pass            
+                # driver.save_screenshot("8.png")
+            time.sleep(random.randrange(3, 6))
         except NoSuchElementException:
             print(NoSuchElementException)
             print("Капча не найдена")
+            pass
                  
         phoneNumbers = extract_phone_numbers(driver)[:-1]
         
@@ -327,7 +347,8 @@ def get_phone(url):
     
         return phoneNumbers
     except NoSuchElementException:
-        print(NoSuchElementException)     
+        print(NoSuchElementException)
+        phoneNumbers = extract_phone_numbers(driver)[:-1]
         return phoneNumbers
 
 
