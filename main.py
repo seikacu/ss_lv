@@ -168,14 +168,14 @@ def check_sub_ctegory(soup:BeautifulSoup):
         return False
     
 
-def set_driver_options(options:uc.ChromeOptions):
+def set_driver_options(options):
     
     # options.add_experimental_option("excludeSwitches",["ignore-certificate-errors"])
     options.add_argument('--ignore-certificate-errors')
     options.add_argument('--ignore-ssl-errors')
     # options.add_argument("--disable-proxy-certificate-handler")
     options.add_argument("--disable-blink-features=AutomationControlled")
-    options.add_argument("user-data-dir=C:\\WebDriver\\chromedriver\\user")
+    # options.add_argument("--user-data-dir=C:\\WebDriver\\chromedriver\\user")
     # options.add_argument("start-maximzed")
     # options.add_argument("--window-size=1920,1080")
     options.add_argument("--start-maximized")
@@ -189,9 +189,13 @@ def set_driver_options(options:uc.ChromeOptions):
     # options.debugger_address = 'localhost:8989'
     
 
-def get_selenium_driver(use_proxy=False, user_agent=None):
+def get_selenium_driver(use_proxy=False, user_agent=True):
     
     options = uc.ChromeOptions()
+    # options.add_argument('--ignore-certificate-errors')
+
+    # options.add_argument('--ignore-certificate-errors')
+    # options.add_argument('--ignore-ssl-errors')
     # options = webdriver.ChromeOptions()
     set_driver_options(options)
     
@@ -206,8 +210,8 @@ def get_selenium_driver(use_proxy=False, user_agent=None):
         options.add_extension(plugin_file)
     
     if user_agent:
-        # ua = UserAgent()
-        # user_agent = ua.chrome
+        ua = UserAgent()
+        user_agent = ua.random
         options.add_argument(f'--user-agent={user_agent}')
 
     caps = DesiredCapabilities().CHROME
@@ -219,8 +223,17 @@ def get_selenium_driver(use_proxy=False, user_agent=None):
     #         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
     #     )
     
+    seleniumwire_options = {
+        'proxy': {
+            'https': f'https://{PROXY_USER}:{PROXY_PASS}@{PROXY_HOST}:{PROXY_PORT}'
+        }
+    }
+
+    
     service = Service(desired_capabilities=caps, executable_path=r"C:\WebDriver\chromedriver\chromedriver.exe")
-    driver = uc.Chrome(version_main=109, service=service, options=options) # 
+    driver = uc.Chrome(version_main=109, service=service, options=options)
+    # driver = webdriver.Chrome(service=service, options=options)
+    # service=service, seleniumwire_options=seleniumwire_options,
         
     # dcap = dict (DesiredCapabilities.PHANTOMJS) #setuserAgent
     # dcap["phantomjs.page.settings.userAgent"] = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10.9; rv:25.0) Gecko/20100101 Firefox/25.0 ")
@@ -252,7 +265,9 @@ def extract_phone_numbers(driver:webdriver.Chrome):
 def get_phone(url):
     phoneNumbers = ""
     try:
-        driver = get_selenium_driver(use_proxy=False, user_agent=USER_AGENT)        
+        # ua = UserAgent()
+        # user_agent = ua.random
+        driver = get_selenium_driver(use_proxy=False, user_agent=True)        
         # driver.get('https://2ip.ru')
         solver = RecaptchaSolver(driver=driver)
         driver.get(url)
@@ -636,6 +651,42 @@ def test_3():
 
     driver.quit()
 
+def test_proxy():
+    
+    options = uc.ChromeOptions()
+    options.add_argument('--ignore-certificate-errors')
+    options.add_argument('--ignore-ssl-errors')
+    
+    # options = webdriver.ChromeOptions()
+    # set_driver_options(options)
+        
+    ua = UserAgent()
+    user_agent = ua.random
+    options.add_argument(f'--user-agent={user_agent}')
+    options.add_argument("--start-maximized")
+
+    # caps = DesiredCapabilities().CHROME
+    # # caps['pageLoadStrategy'] = 'eager'
+    # caps['pageLoadStrategy'] = 'normal'
+    
+    
+    seleniumwire_options = {
+        'verify_ssl': False,
+        'proxy': {
+            'https': f'https://{PROXY_USER}:{PROXY_PASS}@{PROXY_HOST}:{PROXY_PORT}'
+        }
+    }
+
+    
+    # service = Service(desired_capabilities=caps, executable_path=r"C:\WebDriver\chromedriver\chromedriver.exe")
+    driver = uc.Chrome(version_main=108, seleniumwire_options=seleniumwire_options, options=options)
+    
+    # seleniumwire_options=seleniumwire_options,
+    # service=service,
+    driver.get("https://whoer.net")
+    time.sleep(100)
+    
+
 def main():
     
     print("start")
@@ -644,6 +695,7 @@ def main():
     # test_3()
     # test()
     # test_2()
+    # test_proxy()
     print("end")
 
     
