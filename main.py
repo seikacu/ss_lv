@@ -13,7 +13,7 @@ import gzip
 
 from proxy_auth_data import login, password
 from tkinter import *
-from tkinter.ttk import Combobox, Progressbar 
+from tkinter.ttk import Combobox, Progressbar
 from datetime import datetime
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
@@ -30,7 +30,6 @@ from bs4 import BeautifulSoup
 from fake_useragent import UserAgent
 from tqdm import tqdm
 from multiprocessing import Pool
-
 
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
 
@@ -90,18 +89,17 @@ chrome.webRequest.onAuthRequired.addListener(
 
 
 def get_soup(mode, url, str):
-    
     # ua = UserAgent()
     # user_agent = ua.random
-    headers = { "User-Agent": f"{USER_AGENT}" }
-    
+    headers = {"User-Agent": f"{USER_AGENT}"}
+
     fileName = ""
-    
+
     if mode == 1:
         fileName = str[len(str) - 3]
     if mode == 2:
         if len(str) == 4:
-            fileName = str[2] 
+            fileName = str[2]
         if len(str) == 5:
             fileName = str[3]
         if len(str) == 6:
@@ -116,60 +114,57 @@ def get_soup(mode, url, str):
             fileName = str[8]
     if mode == 3:
         fileName = str[len(str) - 1]
-    
+
     if not fileName.endswith(".html"):
         fileName += ".html"
-        
+
     r = requests.get(url=url, headers=headers, allow_redirects=False)
-    
+
     if not os.path.exists("data"):
         os.mkdir("data")
-    
+
     with open(f"data/{fileName}", "w", encoding="utf-8") as file:
         file.write(r.text)
-    
+
     with open(f"data/{fileName}", encoding="utf-8") as file:
-        src = file.read()    
+        src = file.read()
     soup = BeautifulSoup(src, "lxml")
-    
+
     return soup
 
 
 def get_start_pages():
-    
     url = "https://www.ss.lv/ru/"
     str = url.split("/")
     soup = get_soup(1, url, str)
-    
+
     heading = soup.find_all("h2")
     i = 1
     all_categories_dict = {}
-    
+
     for item in heading:
         item_href = item.find("a").get("href")
         item_text = item.find("a").get("title")
         all_categories_dict[i] = item_text, item_href
-        
+
         with open("data/all_categories_dict.json", "w", encoding="utf-8") as file:
             # indent - отступ в файле
             # ensure_ascii=False - не экранирует символы и помогает при работе с кирилицей
             json.dump(all_categories_dict, file, indent=4, ensure_ascii=False)
-            
+
         i += 1
 
-    
-def check_sub_ctegory(soup:BeautifulSoup):
-    
+
+def check_sub_ctegory(soup: BeautifulSoup):
     subCat = soup.find_all("h4", class_="category")
-    
+
     if len(subCat) > 0:
         return True
     else:
         return False
-    
+
 
 def set_driver_options(options):
-    
     # options.add_experimental_option("excludeSwitches",["ignore-certificate-errors"])
     options.add_argument('--ignore-certificate-errors')
     options.add_argument('--ignore-ssl-errors')
@@ -187,10 +182,9 @@ def set_driver_options(options):
     # options.add_argument('--allow-insecure-localhost')
     # options.add_argument("--disable-extensions")
     # options.debugger_address = 'localhost:8989'
-    
+
 
 def get_selenium_driver(use_proxy=False, user_agent=True):
-    
     options = uc.ChromeOptions()
     # options.add_argument('--ignore-certificate-errors')
 
@@ -198,7 +192,7 @@ def get_selenium_driver(use_proxy=False, user_agent=True):
     # options.add_argument('--ignore-ssl-errors')
     # options = webdriver.ChromeOptions()
     set_driver_options(options)
-    
+
     if use_proxy:
         options.add_experimental_option('excludeSwitches', ['enable-logging'])
         plugin_file = 'proxy_auth_plugin.zip'
@@ -206,9 +200,9 @@ def get_selenium_driver(use_proxy=False, user_agent=True):
         with zipfile.ZipFile(plugin_file, 'w') as zp:
             zp.writestr('manifest.json', manifest_json)
             zp.writestr('background.js', background_js)
-        
+
         options.add_extension(plugin_file)
-    
+
     if user_agent:
         ua = UserAgent()
         user_agent = ua.random
@@ -217,27 +211,26 @@ def get_selenium_driver(use_proxy=False, user_agent=True):
     caps = DesiredCapabilities().CHROME
     # caps['pageLoadStrategy'] = 'eager'
     caps['pageLoadStrategy'] = 'normal'
-    
+
     # dcap = dict(DesiredCapabilities.PHANTOMJS)
     # dcap["phantomjs.page.settings.userAgent"] = (
     #         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
     #     )
-    
+
     seleniumwire_options = {
         'proxy': {
             'https': f'https://{PROXY_USER}:{PROXY_PASS}@{PROXY_HOST}:{PROXY_PORT}'
         }
     }
 
-    
     service = Service(desired_capabilities=caps, executable_path=r"C:\WebDriver\chromedriver\chromedriver.exe")
     driver = uc.Chrome(version_main=109, service=service, options=options)
     # driver = webdriver.Chrome(service=service, options=options)
     # service=service, seleniumwire_options=seleniumwire_options,
-        
+
     # dcap = dict (DesiredCapabilities.PHANTOMJS) #setuserAgent
     # dcap["phantomjs.page.settings.userAgent"] = ("Mozilla/5.0 (Macintosh; Intel Mac OS X 10.9; rv:25.0) Gecko/20100101 Firefox/25.0 ")
-    
+
     # # Путь к исполняемому файлу PhantomJS
     # phantomjs_path = r'C:\WebDriver\PhantomJS\phantomjs'
 
@@ -247,7 +240,7 @@ def get_selenium_driver(use_proxy=False, user_agent=True):
     return driver
 
 
-def extract_phone_numbers(driver:webdriver.Chrome):
+def extract_phone_numbers(driver: webdriver.Chrome):
     phoneNumbers = ""
     phone1 = ""
     phone2 = ""
@@ -267,7 +260,7 @@ def get_phone(url):
     try:
         # ua = UserAgent()
         # user_agent = ua.random
-        driver = get_selenium_driver(use_proxy=False, user_agent=True)        
+        driver = get_selenium_driver(use_proxy=False, user_agent=True)
         # driver.get('https://2ip.ru')
         solver = RecaptchaSolver(driver=driver)
         driver.get(url)
@@ -275,11 +268,11 @@ def get_phone(url):
         # driver.execute_cdp_cmd('Page.addScriptToEvaluateOnNewDocument', {'source': 'alert("Hooray! I did it!")'})
         # driver.save_screenshot("2.png")
         # driver.refresh
-        
+
         # with open("page.html", "w", encoding="utf-8") as f:
         #     f.write(driver.page_source)
         # driver.save_screenshot("3.png")
-                
+
         time.sleep(random.randrange(1, 3))
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
         time.sleep(random.randrange(1, 3))
@@ -287,7 +280,8 @@ def get_phone(url):
         # driver.save_screenshot("4.png")
         try:
             cookie_confirm_div = driver.find_element(By.ID, 'cookie_confirm_dv')
-            accept_button = cookie_confirm_div.find_element(By.XPATH, './/button[contains(text(), "Принять и продолжить")]')
+            accept_button = cookie_confirm_div.find_element(By.XPATH,
+                                                            './/button[contains(text(), "Принять и продолжить")]')
             accept_button.click()
             time.sleep(random.randrange(1, 3))
         except NoSuchElementException:
@@ -305,11 +299,11 @@ def get_phone(url):
                 time.sleep(random.randrange(1, 3))
 
             # driver.save_screenshot("6.png")
-            
+
             # driver.save_screenshot("3.png")
             # driver.refresh
             # driver.save_screenshot("3.png")
-            
+
             showPhone = driver.find_element(By.XPATH, "//a[contains(@onclick, '_show_phone')]")
             # showPhone = driver.find_element_by_xpath("//a[contains(@onclick, '_show_phone')]")
             if showPhone.is_displayed():
@@ -319,23 +313,22 @@ def get_phone(url):
             # new_onclick_value = "_show_phone(1,'',null);"
             # driver.execute_script("arguments[0].setAttribute('onclick', arguments[1]);", showPhone, new_onclick_value)
             # driver.execute_script("arguments[0].click();", showPhone)
-            
+
             # driver.save_screenshot("7.png")
             # with open("captcha.html", "w", encoding="utf-8") as f:
             #     f.write(driver.page_source)
 
-            
             # else:
             # print("The element showPhone is not visible.")
         except NoSuchElementException:
             # print(NoSuchElementException)
             print("Кнопка показать телефон не найдена")
-        
+
         try:
             recaptcha_iframe = driver.find_element(By.XPATH, '//iframe[@title="reCAPTCHA"]')
             recaptcha_iframe.find_element(By.XPATH, '//textarea[@id="g-recaptcha-response"]')
             recaptcha_iframe.click()
-            time.sleep(random.randrange(3, 6))            
+            time.sleep(random.randrange(3, 6))
             showPhone = driver.find_element(By.XPATH, "//a[contains(@onclick, '_show_phone')]")
             # showPhone = driver.find_element_by_xpath("//a[contains(@onclick, '_show_phone')]")
             try:
@@ -346,20 +339,20 @@ def get_phone(url):
                 # print(selenium_recaptcha_solver.exceptions.RecaptchaException)
                 print("ОШИБКА РЕШАТЕЛЯ КАПЧИ!!!")
                 time.sleep(random.randrange(30, 60))
-                pass            
+                pass
                 # driver.save_screenshot("8.png")
             time.sleep(random.randrange(3, 6))
         except NoSuchElementException:
             print(NoSuchElementException)
             print("Капча не найдена")
             pass
-                 
+
         phoneNumbers = extract_phone_numbers(driver)[:-1]
-        
+
         # pickle.dump(driver.get_cookies, open("cokies", "wb"))
         # driver.close()
         # driver.quit()
-    
+
         return phoneNumbers
     except NoSuchElementException:
         print(NoSuchElementException)
@@ -368,7 +361,6 @@ def get_phone(url):
 
 
 def fill_data(link, nameCsv, selection):
-    
     phone = ""
     email = ""
     # site = ""
@@ -379,19 +371,19 @@ def fill_data(link, nameCsv, selection):
     sub_category_3 = ""
     sub_category_4 = ""
     sub_category_5 = ""
-    
+
     url = f"https://www.ss.lv{link}"
     str = link.split("/")
     soup = get_soup(3, url, str)
-        
+
     sels = selection.split("-")
     category = sels[1]
-    
+
     links = soup.select('h2.headtitle a')
     arr_links = []
     for link in links:
         arr_links.append(link.text)
-    
+
     for i in range(0, len(arr_links)):
         if i == 0:
             sub_category_1 = arr_links[0]
@@ -403,7 +395,7 @@ def fill_data(link, nameCsv, selection):
             sub_category_4 = arr_links[3]
         if i == 4:
             sub_category_5 = arr_links[4]
-    
+
     # table = soup.find("div", id="tr_cont")
     td_locate = soup.find('td', class_='ads_contacts_name', string=re.compile(r'место', re.IGNORECASE))
     if td_locate:
@@ -411,9 +403,9 @@ def fill_data(link, nameCsv, selection):
         if next_td_locate:
             text = next_td_locate.get_text()
             location = text
-    
+
     phone = get_phone(url)
-    
+
     with open(f"result/{nameCsv}.csv", "a", newline='', encoding="utf-8") as file:
         writer = csv.writer(file)
         writer.writerow(
@@ -430,46 +422,44 @@ def fill_data(link, nameCsv, selection):
                 sub_category_5.replace(",", ";").strip()
             )
         )
-    
 
-def get_list_links(soup:BeautifulSoup, nameCsv, selection):
-    
+
+def get_list_links(soup: BeautifulSoup, nameCsv, selection):
     div_d1_tags = soup.find_all('div', {'class': 'd1'})
-    
+
     for div_tag in div_d1_tags:
         links = div_tag.find_all('a')
-        
+
         for link in links:
             fill_data(link['href'], nameCsv, selection)
 
 
-def scrap_data(soup:BeautifulSoup, nameCsv, selection, url, progress_callback):
-    
+def scrap_data(soup: BeautifulSoup, nameCsv, selection, url, progress_callback):
     count = 1
     pages = soup.find("a", class_="navi")
-    
+
     if pages is not None:
         pages_count = pages.get("href")
         pattern = r'page(\d+)\.html'
         match = re.search(pattern, pages_count)
-        
+
         if match:
             count = int(match.group(1))
             i = 1
-            
+
             while i < count + 1:
                 lin = f"{url}page{i}.html"
-                
+
                 str = lin.split("/")
                 soup = get_soup(3, url, str)
-                
+
                 div_d1_tags = soup.find_all('div', {'class': 'd1'})
                 for div_tag in div_d1_tags:
                     links = div_tag.find_all('a')
                     for link in links:
                         fill_data(link['href'], nameCsv, selection)
                 i += 1
-                
+
     else:
         div_d1_tags = soup.find_all('div', {'class': 'd1'})
         for div_tag in div_d1_tags:
@@ -478,72 +468,68 @@ def scrap_data(soup:BeautifulSoup, nameCsv, selection, url, progress_callback):
                 fill_data(link['href'], nameCsv, selection)
 
 
-def get_data(href:str, nameCsv, selection, progress_callback):
-    
+def get_data(href: str, nameCsv, selection, progress_callback):
     url = f"https://www.ss.lv{href}"
     str = href.split("/")
     soup = get_soup(2, url, str)
-      
+
     if check_sub_ctegory(soup):
         subCats = soup.find_all("h4", class_="category")
         total_subcategories = len(subCats)
-        
-        for idx, item in tqdm(enumerate(subCats), total=total_subcategories, desc="Processing subcategories", unit="subcategory"):
+
+        for idx, item in tqdm(enumerate(subCats), total=total_subcategories, desc="Processing subcategories",
+                              unit="subcategory"):
             item_href = item.find("a").get("href")
             item_text = item.find("a").get("title")
-            if str[1] == "ru": 
+            if str[1] == "ru":
                 get_data(item_href, nameCsv, selection, progress_callback)
             progress_callback((idx + 1) / total_subcategories)
     else:
         scrap_data(soup, nameCsv, selection, url, progress_callback)
 
-    
+
 def get_category():
-    
     with open("data/all_categories_dict.json", encoding="utf-8") as file:
         all_categories = json.load(file)
-        
+
     category = list()
-    
+
     for key, value in all_categories.items():
         category_name = value[0]
         category.append(f"{key} - {category_name}")
-        
+
     return category
 
-    
-def href(selection:str):
-    
+
+def href(selection: str):
     with open("data/all_categories_dict.json", encoding="utf-8") as file:
         all_categories = json.load(file)
-        
+
     category = list()
-    
+
     for key, value in all_categories.items():
         category_name = value[0]
         category_link = value[1]
         val = f"{key} - {category_name}"
-        
+
         if val == selection:
             return category_link
 
-    
+
 def window():
-    
     def clicked():
-        
         selection = combobox.get()
         link = href(selection)
         s = link.split("/")
         category_name = s[2]
-        
+
         if not os.path.exists("result"):
             os.mkdir("result")
-       
+
         curDate = datetime.now()
         curDateStr = curDate.strftime("%Y-%m-%d")
         nameCsv = f"{category_name}_{curDateStr}"
-        
+
         with open(f"result/{nameCsv}.csv", "w", newline='', encoding="utf-8") as file:
             writer = csv.writer(file)
             writer.writerow(
@@ -560,47 +546,45 @@ def window():
                     "sub_category_5"
                 )
             )
-        
+
         get_data(link, nameCsv, selection, update_progress)
-        
+
         print("FINISH!!!")
-        
+
     def selected(event):
-        
         selection = combobox.get()
         lblSelect["text"] = f"Вы выбрали: {selection}"
-        
+
     window = Tk()
     window.geometry('400x250')
     window.title("Парсер сайта объявлений ss.lv")
-    
+
     lbl = Label(window, text="Выберите категорию для парсинга", font=("Arial Bold", 15))
     lbl.grid(column=0, row=0)
-    
+
     category = get_category()
-    
+
     combobox = Combobox(window, values=category, state="readonly", width=30)
     combobox.bind("<<ComboboxSelected>>", selected)
     combobox.current(0)
-    combobox.grid(column=0, row=10) 
-    
+    combobox.grid(column=0, row=10)
+
     lblSelect = Label(window, text="", font=("Arial Bold", 15))
-    lblSelect.grid(column=0, row=20)  
-    
-    btn = Button(window, text="Запустить", command=clicked)  
-    btn.grid(column=0, row=30)  
-    
+    lblSelect.grid(column=0, row=20)
+
+    btn = Button(window, text="Запустить", command=clicked)
+    btn.grid(column=0, row=30)
+
     bar = Progressbar(window, length=200, mode='determinate')
     bar.grid(column=0, row=40)
-    
-    def update_progress(progress): 
+
+    def update_progress(progress):
         bar['value'] = progress * 100
-    
+
     window.mainloop()
 
 
 def test():
-
     cookies = {
         'LG': 'ru',
         'sid': '690797dfd93d29b221e4f580c6e91b778df5ef2f97e3f9837bc7fb4f6cd77efd583d8bdefb6228a5bce16df9f16023fe',
@@ -630,19 +614,19 @@ def test():
         cookies=cookies,
         headers=headers,
     )
-    
+
     with open(f"data/test.html", "w", encoding="utf-8") as file:
         file.write(response.text)
+
 
 def test_2():
     url = "https://www.ss.lv/js/ru/2023-07-21/5d448e531eb26e5cd978fab3b399bf72af7f39f63ec80ce0b20cba336198f91e.js?d=https//www.ss.lv/msg/ru/transport/cars/volkswagen/tiguan/mfbhk.html"
     response = requests.get(url)
     response.json
     print(response.content)
-    
-    
-def test_3():
 
+
+def test_3():
     phantomjs_path = r'C:\WebDriver\PhantomJS\phantomjs'
 
     driver = webdriver.PhantomJS(executable_path=phantomjs_path)
@@ -651,15 +635,15 @@ def test_3():
 
     driver.quit()
 
+
 def test_proxy():
-    
     options = uc.ChromeOptions()
     options.add_argument('--ignore-certificate-errors')
     options.add_argument('--ignore-ssl-errors')
-    
+
     # options = webdriver.ChromeOptions()
     # set_driver_options(options)
-        
+
     ua = UserAgent()
     user_agent = ua.random
     options.add_argument(f'--user-agent={user_agent}')
@@ -668,8 +652,7 @@ def test_proxy():
     # caps = DesiredCapabilities().CHROME
     # # caps['pageLoadStrategy'] = 'eager'
     # caps['pageLoadStrategy'] = 'normal'
-    
-    
+
     seleniumwire_options = {
         'verify_ssl': False,
         'proxy': {
@@ -677,18 +660,16 @@ def test_proxy():
         }
     }
 
-    
     # service = Service(desired_capabilities=caps, executable_path=r"C:\WebDriver\chromedriver\chromedriver.exe")
     driver = uc.Chrome(version_main=108, seleniumwire_options=seleniumwire_options, options=options)
-    
+
     # seleniumwire_options=seleniumwire_options,
     # service=service,
     driver.get("https://whoer.net")
     time.sleep(100)
-    
+
 
 def main():
-    
     print("start")
     get_start_pages()
     window()
@@ -698,7 +679,6 @@ def main():
     # test_proxy()
     print("end")
 
-    
+
 if __name__ == '__main__':
     main()
-    
