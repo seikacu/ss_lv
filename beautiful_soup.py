@@ -127,22 +127,23 @@ def fill_data_thread(link_href, name_csv, selection):
 
 def get_hrefs(name_csv, selection, soup):
     div_d1_tags = soup.find_all('div', {'class': 'd1'})
-    threads = []
     for div_tag in div_d1_tags:
         links = div_tag.find_all('a')
         for link in links:
-            link_href = link['href']
-            thread = threading.Thread(target=fill_data_thread, args=(link_href, name_csv, selection))
-            threads.append(thread)
-            thread.start()
+            fill_data(link['href'], name_csv, selection)
 
-    for thread in threads:
-        thread.join()
-    # div_d1_tags = soup.find_all('div', {'class': 'd1'})
+    # Многопоточность - каждая ссылка запускается в отдельном потоке (до 25 потоков)
+    # threads = []
     # for div_tag in div_d1_tags:
     #     links = div_tag.find_all('a')
     #     for link in links:
-    #         fill_data(link['href'], name_csv, selection)
+    #         link_href = link['href']
+    #         thread = threading.Thread(target=fill_data_thread, args=(link_href, name_csv, selection))
+    #         threads.append(thread)
+    #         thread.start()
+    #
+    # for thread in threads:
+    #     thread.join()
 
 
 def fill_data(link, name_csv, selection):

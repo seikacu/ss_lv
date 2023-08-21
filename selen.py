@@ -77,11 +77,11 @@ chrome.webRequest.onAuthRequired.addListener(
 def set_driver_options(options):
     options.add_argument('--ignore-certificate-errors')
     options.add_argument('--ignore-ssl-errors')
-    # options.add_argument("--disable-proxy-certificate-handler")
+    options.add_argument("--disable-proxy-certificate-handler")
     options.add_argument("--disable-blink-features=AutomationControlled")
-    # options.add_argument("--user-data-dir=C:\\WebDriver\\chromedriver\\user")
+    options.add_argument("--user-data-dir=C:\\WebDriver\\chromedriver\\user")
     options.add_argument("--start-maximized")
-    options.add_argument('--headless=new')
+    # options.add_argument('--headless=new')
     # options.add_argument('--enable-javascript')
 
 
@@ -139,7 +139,7 @@ def extract_phone_numbers(driver: webdriver.Chrome):
 
 def get_phone(url):
     try:
-        driver = get_selenium_driver(use_proxy=False, user_agent=True)
+        driver = get_selenium_driver(use_proxy=True, user_agent=True)
         solver = RecaptchaSolver(driver=driver)
         driver.get(url)
         # time.sleep(random.randrange(1, 3))
