@@ -200,11 +200,3 @@ def fill_data(link, name_csv, selection):
                 sub_category_5.replace(",", ".").strip()
             )
         )
-
-
-# def get_list_links(soup: BeautifulSoup, name_csv, selection):
-#     div_d1_tags = soup.find_all('div', {'class': 'd1'})
-#     for div_tag in div_d1_tags:
-#         links = div_tag.find_all('a')
-#         for link in links:
-#             fill_data(link['href'], name_csv, selection)
