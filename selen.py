@@ -1,26 +1,29 @@
 # import http.client
 # import gzip
 # import pickle
+# import os
+# import sys
 import time
-import random
+# import random
 import zipfile
 
+from python_rucaptcha.image_captcha import ImageCaptcha
+from python_rucaptcha.re_captcha import ReCaptcha
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-from selenium_recaptcha_solver import RecaptchaSolver
 # from seleniumwire import undetected_chromedriver as uc
 # from selenium.webdriver.support.ui import WebDriverWait
 # from selenium.webdriver.support import expected_conditions as EC
 
 from fake_useragent import UserAgent
-
+from rucaptcha import token
 from proxy_auth_data import login, password
 
-PROXY_HOST = '185.122.206.63'
-PROXY_PORT = '4515'
+PROXY_HOST = '136.0.181.142'
+PROXY_PORT = '64902'
 PROXY_USER = login
 PROXY_PASS = password
 
@@ -79,19 +82,23 @@ def set_driver_options(options):
     options.add_argument('--ignore-ssl-errors')
     options.add_argument("--disable-proxy-certificate-handler")
     options.add_argument("--disable-blink-features=AutomationControlled")
-    options.add_argument("--user-data-dir=C:\\WebDriver\\chromedriver\\user")
+    # options.add_argument("--user-data-dir=C:\\WebDriver\\chromedriver\\user")
+    options.add_argument("--user-data-dir=C:\\WebDriver\\chromedriver\\user_proxy")
     options.add_argument("--start-maximized")
     # options.add_argument('--headless=new')
     # options.add_argument('--enable-javascript')
+    # options.debugger_address = 'localhost:8989'
 
 
-def get_selenium_driver(use_proxy=False, user_agent=True):
+def get_selenium_driver(use_proxy=False, user_agent=False):
     # options = uc.ChromeOptions()
     options = webdriver.ChromeOptions()
     set_driver_options(options)
 
     if use_proxy:
         options.add_experimental_option('excludeSwitches', ['enable-logging'])
+        options.add_experimental_option('excludeSwitches', ['enable-automation'])
+        options.add_experimental_option('useAutomationExtension', False)
         plugin_file = 'proxy_auth_plugin.zip'
 
         with zipfile.ZipFile(plugin_file, 'w') as zp:
@@ -100,14 +107,17 @@ def get_selenium_driver(use_proxy=False, user_agent=True):
 
         options.add_extension(plugin_file)
 
+    ua = UserAgent()
     if user_agent:
-        ua = UserAgent()
         user_agent = ua.random
+        options.add_argument(f'--user-agent={user_agent}')
+    else:
+        user_agent = ua.chrome
         options.add_argument(f'--user-agent={user_agent}')
 
     caps = DesiredCapabilities().CHROME
-    # caps['pageLoadStrategy'] = 'eager'
-    caps['pageLoadStrategy'] = 'normal'
+    caps['pageLoadStrategy'] = 'eager'
+    # caps['pageLoadStrategy'] = 'normal'
 
     # seleniumwire_options = {
     #     'proxy': {
@@ -133,18 +143,32 @@ def extract_phone_numbers(driver: webdriver.Chrome):
         # print(NoSuchElementException)
         # print("Не удалось получить телефоны")
         pass
-    phone_numbers = f"{phone1};{phone2};"
+    phone_numbers = f"{phone1};{phone2}"
     return phone_numbers
+
+
+def solve_image_captcha(driver: webdriver.Chrome):
+    try:
+        image_elem = driver.find_element(By.ID, "ss_tcode_img")
+        image_elem.screenshot("captcha.png")
+        image_captcha = ImageCaptcha(rucaptcha_key=token)
+        text_captcha = image_captcha.captcha_handler(captcha_file="captcha.png")['captchaSolve']
+        text_captcha = str(text_captcha).upper()
+        input_text = driver.find_element(By.XPATH, "//input[contains(@id, 'ads_show_phone')]")
+        input_text.send_keys(text_captcha)
+        driver.find_element(By.XPATH, "//input[contains(@value, 'Показать номер')]").click()
+        time.sleep(1)
+    except NoSuchElementException:
+        # print(NoSuchElementException)
+        # print("Графическая капча не найдена")
+        pass
 
 
 def get_phone(url):
     try:
         driver = get_selenium_driver(use_proxy=True, user_agent=True)
-        solver = RecaptchaSolver(driver=driver)
         driver.get(url)
-        # time.sleep(random.randrange(1, 3))
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        time.sleep(random.randrange(1, 3))
 
         # Кнопка Принять и продолжить
         try:
@@ -152,47 +176,107 @@ def get_phone(url):
             accept_button = cookie_confirm_div.find_element(By.XPATH,
                                                             './/button[contains(text(), "Принять и продолжить")]')
             accept_button.click()
-            time.sleep(random.randrange(3, 6))
+            driver.refresh()
         except NoSuchElementException:
             pass
         try:
-            element = driver.find_element(By.ID, 'phdivz_1')
-            if not element.is_displayed():
-                # Изменить значение атрибута style на "display:true;"
-                driver.execute_script("arguments[0].style.display = 'inline-block';", element)
-                time.sleep(random.randrange(3, 6))
+            # element = driver.find_element(By.ID, 'phdivz_1')
+            # if not element.is_displayed():
+            #     # Изменить значение атрибута style на "display:true;"
+            #     driver.execute_script("arguments[0].style.display = 'inline-block';", element)
+            #     time.sleep(random.randrange(3, 6))
             show_phone = driver.find_element(By.XPATH, "//a[contains(@onclick, '_show_phone')]")
             if show_phone.is_displayed():
                 driver.execute_script("arguments[0].click();", show_phone)
-                time.sleep(random.randrange(3, 6))
+                time.sleep(2)
         except NoSuchElementException:
             # print(NoSuchElementException)
             print("Кнопка показать телефон не найдена")
-        try:
-            recaptcha_iframe = driver.find_element(By.XPATH, '//iframe[@title="reCAPTCHA"]')
-            recaptcha_iframe.find_element(By.XPATH, '//textarea[@id="g-recaptcha-response"]')
-            recaptcha_iframe.click()
-            time.sleep(random.randrange(3, 6))
-            show_phone = driver.find_element(By.XPATH, "//a[contains(@onclick, '_show_phone')]")
-            try:
-                if show_phone.is_displayed():
-                    recaptcha_iframe = driver.find_element(By.XPATH, '//iframe[@title="reCAPTCHA"]')
-                    solver.click_recaptcha_v2(iframe=recaptcha_iframe)
-            except:
-                # print(selenium_recaptcha_solver.exceptions.RecaptchaException)
-                print("БЛОКИРОВКА ГУГЛ ПРИ РЕШЕНИИ КАПЧИ!!!")
-                # time.sleep(random.randrange(30, 60))
-                pass
-            time.sleep(random.randrange(3, 6))
-        except NoSuchElementException:
-            print("Капча не найдена")
-            pass
+        solve_recaptcha(driver)
+        solve_image_captcha(driver)
         phone_numbers = extract_phone_numbers(driver)[:-1]
 
-        driver.close()
+        # driver.close()
         driver.quit()
         return phone_numbers
     except NoSuchElementException:
         print(NoSuchElementException)
         phone_numbers = extract_phone_numbers(driver)[:-1]
         return phone_numbers
+
+
+def solve_recaptcha(driver: webdriver.Chrome):
+    try:
+        recaptcha_iframe = driver.find_element(By.XPATH, '//iframe[@title="reCAPTCHA"]')
+        find_recaptcha_clients = '''
+          // eslint-disable-next-line camelcase
+          if (typeof (___grecaptcha_cfg) !== 'undefined') {
+            // eslint-disable-next-line camelcase, no-undef
+            return Object.entries(___grecaptcha_cfg.clients).map(([cid, client]) => {
+              const data = { id: cid, version: cid >= 10000 ? 'V3' : 'V2' };
+              const objects = Object.entries(client).filter(([_, value]) => value && typeof value === 'object');
+
+              objects.forEach(([toplevelKey, toplevel]) => {
+                const found = Object.entries(toplevel).find(([_, value]) => (
+                  value && typeof value === 'object' && 'sitekey' in value && 'size' in value
+                ));
+
+                if (typeof toplevel === 'object' && toplevel instanceof HTMLElement && toplevel['tagName'] === 'DIV'){
+                    data.pageurl = toplevel.baseURI;
+                }
+
+                if (found) {
+                  const [sublevelKey, sublevel] = found;
+
+                  data.sitekey = sublevel.sitekey;
+                  const callbackKey = data.version === 'V2' ? 'callback' : 'promise-callback';
+                  const callback = sublevel[callbackKey];
+                  if (!callback) {
+                    data.callback = null;
+                    data.function = null;
+                  } else {
+                    data.function = callback;
+                    const keys = [cid, toplevelKey, sublevelKey, callbackKey].map((key) => `['${key}']`).join('');
+                    data.callback = `___grecaptcha_cfg.clients${keys}`;
+                  }
+                }
+              });
+              return data;
+            });
+          }
+          return [];
+        '''
+
+        find_recaptcha = driver.execute_script(find_recaptcha_clients)
+        dict_key = find_recaptcha[0]
+        key = dict_key["sitekey"]
+        callback = dict_key["callback"]
+
+        # !!! поиск элемента ввода решения капчи !!!
+        iframe_hidden = recaptcha_iframe.find_element(By.XPATH, '//iframe[@style="display: none;"]')
+        driver.execute_script("arguments[0].style.display = 'inline-block';", iframe_hidden)
+        elem_hidden = recaptcha_iframe.find_element(By.XPATH, '//textarea[@id="g-recaptcha-response"]')
+        driver.execute_script("arguments[0].style.display = 'inline-block';", elem_hidden)
+
+        # ПРОВЕРКА РАБОТЫ КАПЧИ И СЕРВИСА RUCAPTCHA
+        # data_post = {'key': token, 'method': 'userrecaptcha', 'googlekey': key, "pageurl": driver.current_url}
+        # response = requests.post(url='https://2captcha.com/in.php', data=data_post)
+        # print(response)
+        # print(response.text)
+
+        # !!! РЕШЕНИЕ КАПЧИ !!!
+        re_captcha = ReCaptcha(
+            rucaptcha_key=token,
+            pageurl=driver.current_url,
+            googlekey=key,
+            method='userrecaptcha'
+        )
+        result = re_captcha.captcha_handler()
+        result = result['captchaSolve']
+
+        elem_hidden.send_keys(result)
+        driver.execute_script(f"{callback}('{key}')")
+        time.sleep(1)
+    except NoSuchElementException:
+        # print("Recaptcha не найдена")
+        pass

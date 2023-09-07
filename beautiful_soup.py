@@ -2,7 +2,7 @@ import csv
 import json
 import os
 import re
-import threading
+# import threading
 
 
 import requests
@@ -188,23 +188,23 @@ def fill_data(link, name_csv, selection):
         writer = csv.writer(file)
         writer.writerow(
             (
-                phone.replace(",", ";").strip(),
-                email.replace(",", ";").strip(),
-                # site.replace(",", ";").strip(),
-                location.replace(",", ";").strip(),
-                category.replace(",", ";").strip(),
-                sub_category_1.replace(",", ";").strip(),
-                sub_category_2.replace(",", ";").strip(),
-                sub_category_3.replace(",", ";").strip(),
-                sub_category_4.replace(",", ";").strip(),
-                sub_category_5.replace(",", ";").strip()
+                phone.replace(",", ".").strip(),
+                email.replace(",", ".").strip(),
+                # site.replace(",", ".").strip(),
+                location.replace(",", ".").strip(),
+                category.replace(",", ".").strip(),
+                sub_category_1.replace(",", ".").strip(),
+                sub_category_2.replace(",", ".").strip(),
+                sub_category_3.replace(",", ".").strip(),
+                sub_category_4.replace(",", ".").strip(),
+                sub_category_5.replace(",", ".").strip()
             )
         )
 
 
-def get_list_links(soup: BeautifulSoup, name_csv, selection):
-    div_d1_tags = soup.find_all('div', {'class': 'd1'})
-    for div_tag in div_d1_tags:
-        links = div_tag.find_all('a')
-        for link in links:
-            fill_data(link['href'], name_csv, selection)
+# def get_list_links(soup: BeautifulSoup, name_csv, selection):
+#     div_d1_tags = soup.find_all('div', {'class': 'd1'})
+#     for div_tag in div_d1_tags:
+#         links = div_tag.find_all('a')
+#         for link in links:
+#             fill_data(link['href'], name_csv, selection)
