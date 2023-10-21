@@ -108,3 +108,175 @@ def test_proxy():
     # service=service,
     driver.get("https://whoer.net")
     time.sleep(100)
+
+
+
+# def fill_data_thread(link_href, name_csv, selection):
+#     fill_data(link_href, name_csv, selection)
+
+
+# def get_hrefs(name_csv, selection, soup):
+#     # urls = []
+#     div_d1_tags = soup.find_all('div', {'class': 'd1'})
+#     for div_tag in div_d1_tags:
+#         links = div_tag.find_all('a')
+#         for link in links:
+#             # urls.append(link['href'])
+#             fill_data(link['href'], name_csv, selection)
+
+
+# print(urls)
+# Многопоточность - каждая ссылка запускается в отдельном потоке (до 25 потоков)
+# threads = []
+# for div_tag in div_d1_tags:
+#     links = div_tag.find_all('a')
+#     for link in links:
+#         link_href = link['href']
+#         thread = threading.Thread(target=fill_data_thread, args=(link_href, name_csv, selection))
+#         threads.append(thread)
+#         thread.start()
+#
+# for thread in threads:
+#     thread.join()
+
+
+# def fill_data(link, name_csv, selection):
+#     # phone = ""
+#     email = ""
+#     # site = ""
+#     location = ""
+#     # category = ""
+#     sub_category_1 = ""
+#     sub_category_2 = ""
+#     sub_category_3 = ""
+#     sub_category_4 = ""
+#     sub_category_5 = ""
+#     url = f"https://www.ss.lv{link}"
+#     url_split = link.split("/")
+#     soup = get_soup(2, url, url_split)
+#     sels = selection.split("-")
+#     category = sels[1]
+#     links = soup.select('h2.headtitle a')
+#     arr_links = []
+#     for link in links:
+#         arr_links.append(link.text)
+#     for i in range(0, len(arr_links)):
+#         if i == 0:
+#             sub_category_1 = arr_links[0]
+#         if i == 1:
+#             sub_category_2 = arr_links[1]
+#         if i == 2:
+#             sub_category_3 = arr_links[2]
+#         if i == 3:
+#             sub_category_4 = arr_links[3]
+#         if i == 4:
+#             sub_category_5 = arr_links[4]
+#     td_locate = soup.find('td', class_='ads_contacts_name', string=re.compile(r'место', re.IGNORECASE))
+#     if td_locate:
+#         next_td_locate = td_locate.find_next('td', class_='ads_contacts')
+#         if next_td_locate:
+#             text = next_td_locate.get_text()
+#             location = text
+#     # phones = get_phone(url)
+#     # phone = ";".join(phones)
+#     with open(f"result/{name_csv}.csv", "a", newline='', encoding="utf-8") as file:
+#         writer = csv.writer(file)
+#         writer.writerow(
+#             (
+#                 # phone.replace(",", ".").strip(),
+#                 email.replace(",", ".").strip(),
+#                 # site.replace(",", ".").strip(),
+#                 location.replace(",", ".").strip(),
+#                 category.replace(",", ".").strip(),
+#                 sub_category_1.replace(",", ".").strip(),
+#                 sub_category_2.replace(",", ".").strip(),
+#                 sub_category_3.replace(",", ".").strip(),
+#                 sub_category_4.replace(",", ".").strip(),
+#                 sub_category_5.replace(",", ".").strip(),
+#                 url
+#             )
+#         )
+
+
+# async def gather_data(launch_point, selection, soup, connection):
+#     urls = []
+#     div_d1_tags = soup.find_all('div', {'class': 'd1'})
+#     for div_tag in div_d1_tags:
+#         links = div_tag.find_all('a')
+#         for link in links:
+#             urls.append(link['href'])
+#             # fill_data(link['href'], name_csv, selection)
+#
+#     async with aiohttp.ClientSession(connector=aiohttp.TCPConnector()) as session:  # trust_env=True
+#         tasks = []
+#
+#         for url in range(0, len(urls)):
+#             link = urls[url]
+#             task = asyncio.create_task(get_page_data(session, link, launch_point, selection, connection))
+#             tasks.append(task)
+#
+#         await asyncio.gather(*tasks)
+
+
+            # s = link.split("/")
+            # category_name = s[2]
+            # cur_date = datetime.now()
+            # cur_date_str = cur_date.strftime("%Y-%m-%d %H-%M-%S")
+            # name_csv = f"{category_name}_{cur_date_str}"
+            # with open(f"result/{name_csv}.csv", "w", newline='', encoding="utf-8") as file:
+            #     writer = csv.writer(file)
+            #     writer.writerow(
+            #         (
+            #             "phone",
+            #             "email",
+            #             # "site",
+            #             "location",
+            #             "category",
+            #             "sub_category_1",
+            #             "sub_category_2",
+            #             "sub_category_3",
+            #             "sub_category_4",
+            #             "sub_category_5",
+            #             "url"
+            #         )
+            #     )
+
+
+
+
+
+
+
+
+
+
+# ОТОБРАЖЕНИЕ КАТЕГОРИЙ
+
+        for item in sub_cats:
+            item_href = item.find("a").get("href")
+            print(item_href)
+            # for
+            get_data(item_href, launch_point, selection, progress_callback, connection)
+
+
+
+    # таким же способом проверять следующию иерархию ссылки, и если она не равна предыдущей, то пропускать ее
+    len_link_split = len(link_split)
+    if len_link_split == 5:
+        print(link)
+        pass
+    elif len_link_split == 6:
+        print(link)
+        pass
+    elif len_link_split == 7:
+        print(link)
+        pass
+    elif len_link_split == 8:
+        print(link)
+        pass
+    elif len_link_split == 9:
+        print(link)
+        pass
+    elif len_link_split == 10:
+        print(link)
+        pass

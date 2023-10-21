@@ -1,0 +1,9 @@
+selenium==4.14.0
+requests==2.31.0
+beautifulsoup4==4.12.2
+tqdm==4.66.1
+asyncio==3.4.3
+aiohttp==3.8.6
+lxml==4.9.3
+python-rucaptcha==5.3.1
+psycopg==3.1.12

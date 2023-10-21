@@ -1,97 +1,28 @@
-# import http.client
-# import gzip
-# import pickle
-# import os
-# import sys
 import time
-# import random
 import zipfile
 
 from python_rucaptcha.image_captcha import ImageCaptcha
 from python_rucaptcha.re_captcha import ReCaptcha
 from selenium import webdriver
-from selenium.common.exceptions import NoSuchElementException
+from selenium.common.exceptions import NoSuchElementException, ElementNotInteractableException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-# from seleniumwire import undetected_chromedriver as uc
-# from selenium.webdriver.support.ui import WebDriverWait
-# from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support import expected_conditions as EC
 
-from fake_useragent import UserAgent
-from rucaptcha import token
-from proxy_auth_data import login, password
+from selenium.webdriver.support.ui import WebDriverWait
 
-PROXY_HOST = '136.0.181.142'
-PROXY_PORT = '64902'
-PROXY_USER = login
-PROXY_PASS = password
-
-manifest_json = """
-{
-    "version": "1.0.0",
-    "manifest_version": 2,
-    "name": "Chrome Proxy",
-    "permissions": [
-        "proxy",
-        "tabs",
-        "unlimitedStorage",
-        "storage",
-        "<all_urls>",
-        "webRequest",
-        "webRequestBlocking"
-    ],
-    "background": {
-        "scripts": ["background.js"]
-    },
-    "minimum_chrome_version":"76.0.0"
-}
-"""
-
-background_js = """
-let config = {
-        mode: "fixed_servers",
-        rules: {
-        singleProxy: {
-            scheme: "http",
-            host: "%s",
-            port: parseInt(%s)
-        },
-        bypassList: ["localhost"]
-        }
-    };
-chrome.proxy.settings.set({value: config, scope: "regular"}, function() {});
-function callbackFn(details) {
-    return {
-        authCredentials: {
-            username: "%s",
-            password: "%s"
-        }
-    };
-}
-chrome.webRequest.onAuthRequired.addListener(
-            callbackFn,
-            {urls: ["<all_urls>"]},
-            ['blocking']
-);
-""" % (PROXY_HOST, PROXY_PORT, PROXY_USER, PROXY_PASS)
+import secure
+from db_sql import add_phone1, add_phone2
 
 
 def set_driver_options(options):
-    options.add_argument('--ignore-certificate-errors')
-    options.add_argument('--ignore-ssl-errors')
-    options.add_argument("--disable-proxy-certificate-handler")
+    options.add_argument('--headless=new')
     options.add_argument("--disable-blink-features=AutomationControlled")
-    # options.add_argument("--user-data-dir=C:\\WebDriver\\chromedriver\\user")
-    options.add_argument("--user-data-dir=C:\\WebDriver\\chromedriver\\user_proxy")
-    options.add_argument("--start-maximized")
-    # options.add_argument('--headless=new')
-    # options.add_argument('--enable-javascript')
-    # options.debugger_address = 'localhost:8989'
+    options.add_argument("--user-data-dir=C:\\WebDriver\\chromedriver\\user")
 
 
-def get_selenium_driver(use_proxy=False, user_agent=False):
-    # options = uc.ChromeOptions()
+def get_selenium_driver(use_proxy=False):
     options = webdriver.ChromeOptions()
     set_driver_options(options)
 
@@ -102,112 +33,121 @@ def get_selenium_driver(use_proxy=False, user_agent=False):
         plugin_file = 'proxy_auth_plugin.zip'
 
         with zipfile.ZipFile(plugin_file, 'w') as zp:
-            zp.writestr('manifest.json', manifest_json)
-            zp.writestr('background.js', background_js)
+            zp.writestr('manifest.json', secure.manifest_json_1)
+            zp.writestr('background.js', secure.background_js_1)
 
         options.add_extension(plugin_file)
 
-    ua = UserAgent()
-    if user_agent:
-        user_agent = ua.random
-        options.add_argument(f'--user-agent={user_agent}')
-    else:
-        user_agent = ua.chrome
-        options.add_argument(f'--user-agent={user_agent}')
+    user_agent = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
+                  "Chrome/116.0.5845.967 YaBrowser/23.9.1.967 Yowser/2.5 Safari/537.36")
+    options.add_argument(f'--user-agent={user_agent}')
 
     caps = DesiredCapabilities().CHROME
     caps['pageLoadStrategy'] = 'eager'
-    # caps['pageLoadStrategy'] = 'normal'
 
-    # seleniumwire_options = {
-    #     'proxy': {
-    #         'https': f'https://{PROXY_USER}:{PROXY_PASS}@{PROXY_HOST}:{PROXY_PORT}'
-    #     }
-    # }
-
-    service = Service(desired_capabilities=caps, executable_path=r"C:\WebDriver\chromedriver\chromedriver.exe")
-    # service=service, seleniumwire_options=seleniumwire_options,
+    service = Service(
+        desired_capabilities=caps,
+        executable_path=r"C:\WebDriver\chromedriver\chromedriver.exe")
     driver = webdriver.Chrome(service=service, options=options)
-    # driver = uc.Chrome(version_main=109, service=service, options=options)
 
     return driver
 
 
-def extract_phone_numbers(driver: webdriver.Chrome):
-    phone1 = ""
-    phone2 = ""
+def extract_phone_numbers(connection, driver: webdriver.Chrome, id_db):
     try:
         phone1 = driver.find_element(By.XPATH, "//span[contains(@id, 'phone_td_1')]").text
-        phone2 = driver.find_element(By.XPATH, "//span[contains(@id, 'phone_td_2')]").text
-    except NoSuchElementException:
-        # print(NoSuchElementException)
-        # print("Не удалось получить телефоны")
+        if phone1.endswith("***"):
+            return False
+        add_phone1(connection, id_db, phone1)
+    except NoSuchElementException as ex:
+        add_phone1(connection, id_db, "снято с публикации")
+        reason = "Не удалось получить телефон"
+        secure.log.write_error_log(reason, ex)
         pass
-    phone_numbers = f"{phone1};{phone2}"
-    return phone_numbers
+    try:
+        phone2 = driver.find_element(By.XPATH, "//span[contains(@id, 'phone_td_2')]").text
+        add_phone2(connection, id_db, phone2)
+    except NoSuchElementException as ex:
+        reason = "Отсутствует 2-ой телефон"
+        secure.log.write_error_log(reason, ex)
+        pass
 
 
 def solve_image_captcha(driver: webdriver.Chrome):
     try:
         image_elem = driver.find_element(By.ID, "ss_tcode_img")
         image_elem.screenshot("captcha.png")
-        image_captcha = ImageCaptcha(rucaptcha_key=token)
-        text_captcha = image_captcha.captcha_handler(captcha_file="captcha.png")['captchaSolve']
+        image_captcha = ImageCaptcha(rucaptcha_key=secure.rucaptcha_token)
+        text_captcha = image_captcha.captcha_handler(
+            captcha_file="captcha.png")['captchaSolve']
         text_captcha = str(text_captcha).upper()
-        input_text = driver.find_element(By.XPATH, "//input[contains(@id, 'ads_show_phone')]")
+        input_text = driver.find_element(
+            By.XPATH, "//input[contains(@id, 'ads_show_phone')]")
         input_text.send_keys(text_captcha)
-        driver.find_element(By.XPATH, "//input[contains(@value, 'Показать номер')]").click()
+        driver.find_element(
+            By.XPATH,
+            "//input[contains(@value, 'Показать номер')]").click()
         time.sleep(1)
-    except NoSuchElementException:
-        # print(NoSuchElementException)
-        # print("Графическая капча не найдена")
+    except NoSuchElementException as ex:
+        reason = "Графическая капча не найдена"
+        secure.log.write_error_log(reason, ex)
+        pass
+    except ElementNotInteractableException as ex:
+        reason = "Элемент, с которым невозможно взаимодействовать (элемент не активен)"
+        secure.log.write_error_log(reason, ex)
+        print("Элемент, с которым невозможно взаимодействовать (элемент не активен)")
         pass
 
 
-def get_phone(url):
+def click_i_no_robot(driver):
     try:
-        driver = get_selenium_driver(use_proxy=True, user_agent=True)
-        driver.get(url)
-        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+        recaptcha_iframe = driver.find_element(By.XPATH, '//iframe[@title="reCAPTCHA"]')
+        recaptcha_iframe.click()
+        time.sleep(1)
+    except NoSuchElementException as ex:
+        reason = "Графическая капча не найдена"
+        secure.log.write_error_log(reason, ex)
+        pass
+    except ElementNotInteractableException as ex:
+        reason = "Элемент, с которым невозможно взаимодействовать (элемент не активен)"
+        secure.log.write_error_log(reason, ex)
+        print("Элемент, с которым невозможно взаимодействовать (элемент не активен)")
+        pass
 
-        # Кнопка Принять и продолжить
+
+def get_phone(connection, driver: webdriver.Chrome, id_bd):
+    try:
         try:
-            cookie_confirm_div = driver.find_element(By.ID, 'cookie_confirm_dv')
-            accept_button = cookie_confirm_div.find_element(By.XPATH,
-                                                            './/button[contains(text(), "Принять и продолжить")]')
-            accept_button.click()
-            driver.refresh()
-        except NoSuchElementException:
-            pass
-        try:
-            # element = driver.find_element(By.ID, 'phdivz_1')
-            # if not element.is_displayed():
-            #     # Изменить значение атрибута style на "display:true;"
-            #     driver.execute_script("arguments[0].style.display = 'inline-block';", element)
-            #     time.sleep(random.randrange(3, 6))
             show_phone = driver.find_element(By.XPATH, "//a[contains(@onclick, '_show_phone')]")
             if show_phone.is_displayed():
                 driver.execute_script("arguments[0].click();", show_phone)
-                time.sleep(2)
-        except NoSuchElementException:
-            # print(NoSuchElementException)
+                time.sleep(1)
+        except NoSuchElementException as ex:
+            reason = "Кнопка Показать номер телефона отсутствует, и/или объявление снято с публикации"
+            secure.log.write_error_log(reason, ex)
             print("Кнопка показать телефон не найдена")
-        solve_recaptcha(driver)
         solve_image_captcha(driver)
-        phone_numbers = extract_phone_numbers(driver)[:-1]
-
-        # driver.close()
-        driver.quit()
-        return phone_numbers
-    except NoSuchElementException:
+        click_i_no_robot(driver)
+        solve_recaptcha(driver)
+        time.sleep(1)
+        if extract_phone_numbers(connection, driver, id_bd) is False:
+            driver.refresh()
+            get_phone(connection, driver, id_bd)
+    except NoSuchElementException as ex:
+        reason = "Элемент не найден"
+        secure.log.write_error_log(reason, ex)
         print(NoSuchElementException)
-        phone_numbers = extract_phone_numbers(driver)[:-1]
-        return phone_numbers
 
 
 def solve_recaptcha(driver: webdriver.Chrome):
     try:
-        recaptcha_iframe = driver.find_element(By.XPATH, '//iframe[@title="reCAPTCHA"]')
+        phone = driver.find_element(By.XPATH, "//span[contains(@id, 'phone_td_1')]").text
+        if phone.endswith("***") is False:
+            return
+
+        # iframe_hidden = driver.find_element(
+        #     By.XPATH, '//iframe[@title="reCAPTCHA"]')
+
         find_recaptcha_clients = '''
           // eslint-disable-next-line camelcase
           if (typeof (___grecaptcha_cfg) !== 'undefined') {
@@ -215,19 +155,19 @@ def solve_recaptcha(driver: webdriver.Chrome):
             return Object.entries(___grecaptcha_cfg.clients).map(([cid, client]) => {
               const data = { id: cid, version: cid >= 10000 ? 'V3' : 'V2' };
               const objects = Object.entries(client).filter(([_, value]) => value && typeof value === 'object');
-
+        
               objects.forEach(([toplevelKey, toplevel]) => {
                 const found = Object.entries(toplevel).find(([_, value]) => (
                   value && typeof value === 'object' && 'sitekey' in value && 'size' in value
                 ));
-
+             
                 if (typeof toplevel === 'object' && toplevel instanceof HTMLElement && toplevel['tagName'] === 'DIV'){
                     data.pageurl = toplevel.baseURI;
                 }
-
+                
                 if (found) {
                   const [sublevelKey, sublevel] = found;
-
+        
                   data.sitekey = sublevel.sitekey;
                   const callbackKey = data.version === 'V2' ? 'callback' : 'promise-callback';
                   const callback = sublevel[callbackKey];
@@ -253,20 +193,20 @@ def solve_recaptcha(driver: webdriver.Chrome):
         callback = dict_key["callback"]
 
         # !!! поиск элемента ввода решения капчи !!!
-        iframe_hidden = recaptcha_iframe.find_element(By.XPATH, '//iframe[@style="display: none;"]')
-        driver.execute_script("arguments[0].style.display = 'inline-block';", iframe_hidden)
-        elem_hidden = recaptcha_iframe.find_element(By.XPATH, '//textarea[@id="g-recaptcha-response"]')
-        driver.execute_script("arguments[0].style.display = 'inline-block';", elem_hidden)
-
-        # ПРОВЕРКА РАБОТЫ КАПЧИ И СЕРВИСА RUCAPTCHA
-        # data_post = {'key': token, 'method': 'userrecaptcha', 'googlekey': key, "pageurl": driver.current_url}
-        # response = requests.post(url='https://2captcha.com/in.php', data=data_post)
-        # print(response)
-        # print(response.text)
+        iframe_hidden = WebDriverWait(driver, 30).until(EC.presence_of_element_located((
+            By.XPATH, '//iframe[@style="display: none;"]')))
+        driver.execute_script(
+            "arguments[0].style.display = 'inline-block';",
+            iframe_hidden)
+        elem_hidden = WebDriverWait(driver, 30).until(EC.presence_of_element_located((
+            By.XPATH, '//textarea[@id="g-recaptcha-response"]')))
+        driver.execute_script(
+            "arguments[0].style.display = 'inline-block';",
+            elem_hidden)
 
         # !!! РЕШЕНИЕ КАПЧИ !!!
         re_captcha = ReCaptcha(
-            rucaptcha_key=token,
+            rucaptcha_key=secure.rucaptcha_token,
             pageurl=driver.current_url,
             googlekey=key,
             method='userrecaptcha'
@@ -276,7 +216,38 @@ def solve_recaptcha(driver: webdriver.Chrome):
 
         elem_hidden.send_keys(result)
         driver.execute_script(f"{callback}('{key}')")
-        time.sleep(1)
-    except NoSuchElementException:
-        # print("Recaptcha не найдена")
+    except NoSuchElementException as ex:
+        reason = "Recaptcha отсутствует"
+        secure.log.write_error_log(reason, ex)
+        pass
+    except ElementNotInteractableException as ex:
+        reason = "Элемент, с которым невозможно взаимодействовать (элемент не активен)"
+        secure.log.write_error_log(reason, ex)
+        print("Элемент, с которым невозможно взаимодействовать (элемент не активен)")
+        pass
+
+
+def fill_data(connection, driver: webdriver.Chrome, id_bd, link):
+    try:
+        driver.get(link)
+
+        # Кнопка Принять и продолжить
+        try:
+            cookie_confirm_div = driver.find_element(By.ID, 'cookie_confirm_dv')
+            accept_button = cookie_confirm_div.find_element(
+                By.XPATH, './/button[contains(text(), "Принять и продолжить")]')
+            accept_button.click()
+            driver.refresh()
+        except NoSuchElementException as ex:
+            reason = "Кнопка принять и продолжить отсутствует"
+            secure.log.write_error_log(reason, ex)
+            pass
+
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+
+        get_phone(connection, driver, id_bd)
+
+    except NoSuchElementException as ex:
+        reason = "Элемент не найден"
+        secure.log.write_error_log(reason, ex)
         pass
