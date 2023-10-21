@@ -8,7 +8,6 @@ import requests
 
 from bs4 import BeautifulSoup
 from tqdm import tqdm
-from requests.exceptions import TooManyRedirects
 
 from secure import log
 from db_sql import check_url_in_bd, insert_to_table
@@ -135,58 +134,54 @@ def scrap_data(soup: BeautifulSoup, launch_point, selection, url, connection):  
 
 
 async def get_page_data(session, link, launch_point, selection, connection):
+    headers = {
+        "Referer": "https://www.ss.lv/",
+        "Sec-Ch-Ua": '"Chromium";v="116", "Not)A;Brand";v="24", "YaBrowser";v="23"',
+        "Sec-Ch-Ua-Mobile": "?0",
+        "Sec-Ch-Ua-Platform": "Windows",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)"
+                      "Chrome/116.0.5845.967 YaBrowser/23.9.1.967 Yowser/2.5 Safari/537.36"
+    }
+    url = f"https://www.ss.lv{link}"
     try:
-        headers = {
-            "Referer": "https://www.ss.lv/",
-            "Sec-Ch-Ua": '"Chromium";v="116", "Not)A;Brand";v="24", "YaBrowser";v="23"',
-            "Sec-Ch-Ua-Mobile": "?0",
-            "Sec-Ch-Ua-Platform": "Windows",
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
-                          "Chrome/116.0.5845.967 YaBrowser/23.9.1.967 Yowser/2.5 Safari/537.36"
-        }
-        url = f"https://www.ss.lv{link}"
-        try:
-            async with (session.get(url=url, headers=headers, allow_redirects=False) as response):
-                response_text = await response.text()
-                url_split = link.split("/")
-                file_name = url_split[len(url_split) - 1]
-                with open(f"data/{file_name}", "w", encoding="utf-8") as file:
-                    file.write(response_text)
-                with open(f"data/{file_name}", encoding="utf-8") as file:
-                    src = file.read()
-                soup = BeautifulSoup(src, "lxml")
-                sel_split = selection.split("-")
-                category = sel_split[1]
-                links = soup.select('h2.headtitle a')
-                location = ""
-                sub_category_1 = ""
-                sub_category_2 = ""
-                sub_category_3 = ""
-                sub_category_4 = ""
-                sub_category_5 = ""
-                for i in range(0, len(links)):
-                    if i == 0:
-                        sub_category_1 = links[0].text
-                    if i == 1:
-                        sub_category_2 = links[1].text
-                    if i == 2:
-                        sub_category_3 = links[2].text
-                    if i == 3:
-                        sub_category_4 = links[3].text
-                    if i == 4:
-                        sub_category_5 = links[4].text
+        async with (session.get(url=url, headers=headers, allow_redirects=False) as response):
+            response_text = await response.text()
+            url_split = link.split("/")
+            file_name = url_split[len(url_split) - 1]
+            with open(f"data/{file_name}", "w", encoding="utf-8") as file:
+                file.write(response_text)
+            with open(f"data/{file_name}", encoding="utf-8") as file:
+                src = file.read()
+            soup = BeautifulSoup(src, "lxml")
+            sel_split = selection.split("-")
+            category = sel_split[1]
+            links = soup.select('h2.headtitle a')
+            location = ""
+            sub_category_1 = ""
+            sub_category_2 = ""
+            sub_category_3 = ""
+            sub_category_4 = ""
+            sub_category_5 = ""
+            for i in range(0, len(links)):
+                if i == 0:
+                    sub_category_1 = links[0].text
+                if i == 1:
+                    sub_category_2 = links[1].text
+                if i == 2:
+                    sub_category_3 = links[2].text
+                if i == 3:
+                    sub_category_4 = links[3].text
+                if i == 4:
+                    sub_category_5 = links[4].text
 
-                find_location = soup.find('td', {'class': 'ads_contacts_name'}, text='Место:')
-                if find_location is not None:
-                    location = find_location.find_next_sibling('td').text
+            find_location = soup.find('td', {'class': 'ads_contacts_name'}, text='Место:')
+            if find_location is not None:
+                location = find_location.find_next_sibling('td').text
 
-                insert_to_table(connection, url, category, sub_category_1, sub_category_2, sub_category_3,
-                                sub_category_4, sub_category_5, location, launch_point)
-        except TooManyRedirects as e:
-            print('Connection Error', str(e))
-        except requests.RequestException as ex:
-            print('Connection Error', str(ex))
+            insert_to_table(connection, url, category, sub_category_1, sub_category_2, sub_category_3,
+                            sub_category_4, sub_category_5, location, launch_point)
     except AttributeError as AE:
+        log.write_log("get_page_data ", AE)
         print(AE)
 
 

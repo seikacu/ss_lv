@@ -51,7 +51,8 @@ def window():
                 fill_data(connection, driver, id_bd, url)
 
         except Exception as _ex:
-            print("[INFO] Error while working with PostgreSQL", _ex)
+            print("Error while working with PostgreSQL", _ex)
+            log.write_log("clicked_get_phone _ Error while working with PostgreSQL", _ex)
         finally:
             if driver:
                 driver.close()
@@ -113,7 +114,8 @@ def window():
 
             get_data(link, get_category_name(), selection, update_progress, connection)
         except Exception as _ex:
-            print("[INFO] Error while working with PostgreSQL", _ex)
+            print("Error while working with PostgreSQL", _ex)
+            log.write_log("clicked_get_data _ Error while working with PostgreSQL", _ex)
         finally:
             if connection:
                 connection.close()

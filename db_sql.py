@@ -2,7 +2,7 @@ import csv
 
 import psycopg
 
-from secure import PSql
+from secure import PSql, log
 
 
 def connect_db():
@@ -47,7 +47,8 @@ def create_table_ads(connection):
             print("[INFO] Table created successfully")
 
     except Exception as _ex:
-        print("[INFO] Error while working with PostgreSQL", _ex)
+        log.write_log("create_table_ads ", _ex)
+        print("Error while working with PostgreSQL", _ex)
 
 
 def insert_to_table(connection, url, category, sub_category_1, sub_category_2, sub_category_3, sub_category_4,
@@ -62,7 +63,8 @@ def insert_to_table(connection, url, category, sub_category_1, sub_category_2, s
             )
 
     except Exception as _ex:
-        print("[INFO] Error while working with PostgreSQL", _ex)
+        log.write_log("insert_to_table ", _ex)
+        print("Error while working with PostgreSQL", _ex)
 
 
 def add_phone1(connection, id_db, phone):
@@ -73,7 +75,8 @@ def add_phone1(connection, id_db, phone):
             print(f"[INFO] Phone_1 {phone} was successfully add")
 
     except Exception as _ex:
-        print("[INFO] Error while working with PostgreSQL", _ex)
+        log.write_log("add_phone1 ", _ex)
+        print("Error while working with PostgreSQL", _ex)
 
 
 def add_phone2(connection, id_db, phone):
@@ -84,7 +87,8 @@ def add_phone2(connection, id_db, phone):
             print(f"[INFO] Phone_2 {phone} was successfully add")
 
     except Exception as _ex:
-        print("[INFO] Error while working with PostgreSQL", _ex)
+        log.write_log("add_phone2 ", _ex)
+        print("Error while working with PostgreSQL", _ex)
 
 
 def get_data_to_csv_file(name_csv):
@@ -100,7 +104,8 @@ def get_data_to_csv_file(name_csv):
                 writer = csv.writer(file)
                 writer.writerows(rows)
     except Exception as _ex:
-        print("[INFO] Error while working with PostgreSQL", _ex)
+        log.write_log("get_data_to_csv_file ", _ex)
+        print("Error while working with PostgreSQL", _ex)
     finally:
         if connection:
             connection.close()
@@ -122,7 +127,8 @@ def delete_data_from_table(category_name):
             cursor.execute(f"""DELETE FROM ads WHERE launch_point = '{category_name}';""")
             print("[INFO] Data was deleted")
     except Exception as _ex:
-        print("[INFO] Error while working with PostgreSQL", _ex)
+        log.write_log("delete_data_from_table ", _ex)
+        print("Error while working with PostgreSQL", _ex)
     finally:
         if connection:
             connection.close()
@@ -138,7 +144,8 @@ def delete_table():
             cursor.execute(f"""DROP TABLE IF EXISTS ads;""")
             print("[INFO] TABLE was deleted")
     except Exception as _ex:
-        print("[INFO] Error while working with PostgreSQL", _ex)
+        log.write_log("delete_table ", _ex)
+        print("Error while working with PostgreSQL", _ex)
     finally:
         if connection:
             connection.close()
