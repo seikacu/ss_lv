@@ -33,16 +33,16 @@ def get_data(link, launch_point, selection, progress_callback, connection, prev_
     link_split = link.split("/")
     # исключаем ссылки из других категорий
     if link_split[2] != launch_point_split[0]:
-        log.write_error_log("Не та категория - ", link)
+        log.write_log("Исключаем ссылку из другой категории - ", link)
         return
 
     if len(link_split) > 4:
         if prev_link not in link:
-            log.write_error_log("Не та ссылка - ", link)
+            log.write_log("Исключаем перекрестную ссылку в категории - ", link)
             # print(link)
             return
         elif "exchange" in link:
-            log.write_error_log("exchange - ", link)
+            log.write_log("exchange - ", link)
             return
 
     soup = get_soup(2, url, link_split)

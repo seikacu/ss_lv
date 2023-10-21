@@ -104,7 +104,7 @@ def get_data_to_csv_file(name_csv):
     finally:
         if connection:
             connection.close()
-            print("[INFO] PostgreSQL connection closed")
+            print("[INFO] Данные выгружены в CSV файл")
 
 
 def check_url_in_bd(connection, url):

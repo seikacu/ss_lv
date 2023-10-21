@@ -166,5 +166,7 @@ secure.py
 proxy_auth_plugin.zip
 captcha.png
 cokies
+.project
+.pydevproject
 
 .vs

@@ -1,3 +1,4 @@
+import platform
 import time
 import zipfile
 
@@ -8,7 +9,7 @@ from selenium.common.exceptions import NoSuchElementException, ElementNotInterac
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support import expected_conditions as ex_cond
 
 from selenium.webdriver.support.ui import WebDriverWait
 
@@ -17,9 +18,32 @@ from db_sql import add_phone1, add_phone2
 
 
 def set_driver_options(options):
-    options.add_argument('--headless=new')
+    # безголовый режим браузера
+    # options.add_argument('--headless=new')
     options.add_argument("--disable-blink-features=AutomationControlled")
-    options.add_argument("--user-data-dir=C:\\WebDriver\\chromedriver\\user")
+    options.add_argument(f"--user-data-dir={get_path_profile()}")
+
+
+def get_path_profile():
+    if platform.system() == "Windows":
+        return r"C:\WebDriver\chromedriver\user"
+    elif platform.system() == "Linux":
+        return "/home/seikacu/webdriver/user"
+    elif platform.system() == "Darwin":
+        return "webdriver/chromedriver-macos/user"
+    else:
+        raise Exception("Unsupported platform!")
+
+
+def get_path_webdriver():
+    if platform.system() == "Windows":
+        return r"C:\WebDriver\chromedriver\chromedriver.exe"
+    elif platform.system() == "Linux":
+        return "/home/seikacu/webdriver//chromedriver"
+    elif platform.system() == "Darwin":
+        return "webdriver/chromedriver-macos"
+    else:
+        raise Exception("Unsupported platform!")
 
 
 def get_selenium_driver(use_proxy=False):
@@ -47,7 +71,7 @@ def get_selenium_driver(use_proxy=False):
 
     service = Service(
         desired_capabilities=caps,
-        executable_path=r"C:\WebDriver\chromedriver\chromedriver.exe")
+        executable_path=get_path_webdriver())
     driver = webdriver.Chrome(service=service, options=options)
 
     return driver
@@ -62,14 +86,14 @@ def extract_phone_numbers(connection, driver: webdriver.Chrome, id_db):
     except NoSuchElementException as ex:
         add_phone1(connection, id_db, "снято с публикации")
         reason = "Не удалось получить телефон"
-        secure.log.write_error_log(reason, ex)
+        secure.log.write_log(reason, ex)
         pass
     try:
         phone2 = driver.find_element(By.XPATH, "//span[contains(@id, 'phone_td_2')]").text
         add_phone2(connection, id_db, phone2)
     except NoSuchElementException as ex:
         reason = "Отсутствует 2-ой телефон"
-        secure.log.write_error_log(reason, ex)
+        secure.log.write_log(reason, ex)
         pass
 
 
@@ -90,12 +114,12 @@ def solve_image_captcha(driver: webdriver.Chrome):
         time.sleep(1)
     except NoSuchElementException as ex:
         reason = "Графическая капча не найдена"
-        secure.log.write_error_log(reason, ex)
+        secure.log.write_log(reason, ex)
         pass
     except ElementNotInteractableException as ex:
-        reason = "Элемент, с которым невозможно взаимодействовать (элемент не активен)"
-        secure.log.write_error_log(reason, ex)
-        print("Элемент, с которым невозможно взаимодействовать (элемент не активен)")
+        reason = "solve_image_captcha (элемент не активен)"
+        secure.log.write_log(reason, ex)
+        print(reason)
         pass
 
 
@@ -105,13 +129,13 @@ def click_i_no_robot(driver):
         recaptcha_iframe.click()
         time.sleep(1)
     except NoSuchElementException as ex:
-        reason = "Графическая капча не найдена"
-        secure.log.write_error_log(reason, ex)
+        reason = "click_i_no_robot Элемент Я не робот не найден"
+        secure.log.write_log(reason, ex)
         pass
     except ElementNotInteractableException as ex:
-        reason = "Элемент, с которым невозможно взаимодействовать (элемент не активен)"
-        secure.log.write_error_log(reason, ex)
-        print("Элемент, с которым невозможно взаимодействовать (элемент не активен)")
+        reason = "click_i_no_robot (элемент не активен)"
+        secure.log.write_log(reason, ex)
+        print(reason)
         pass
 
 
@@ -124,8 +148,8 @@ def get_phone(connection, driver: webdriver.Chrome, id_bd):
                 time.sleep(1)
         except NoSuchElementException as ex:
             reason = "Кнопка Показать номер телефона отсутствует, и/или объявление снято с публикации"
-            secure.log.write_error_log(reason, ex)
-            print("Кнопка показать телефон не найдена")
+            secure.log.write_log(reason, ex)
+            print(reason)
         solve_image_captcha(driver)
         click_i_no_robot(driver)
         solve_recaptcha(driver)
@@ -135,8 +159,8 @@ def get_phone(connection, driver: webdriver.Chrome, id_bd):
             get_phone(connection, driver, id_bd)
     except NoSuchElementException as ex:
         reason = "Элемент не найден"
-        secure.log.write_error_log(reason, ex)
-        print(NoSuchElementException)
+        secure.log.write_log(reason, ex)
+        print(ex)
 
 
 def solve_recaptcha(driver: webdriver.Chrome):
@@ -193,12 +217,12 @@ def solve_recaptcha(driver: webdriver.Chrome):
         callback = dict_key["callback"]
 
         # !!! поиск элемента ввода решения капчи !!!
-        iframe_hidden = WebDriverWait(driver, 30).until(EC.presence_of_element_located((
+        iframe_hidden = WebDriverWait(driver, 30).until(ex_cond.presence_of_element_located((
             By.XPATH, '//iframe[@style="display: none;"]')))
         driver.execute_script(
             "arguments[0].style.display = 'inline-block';",
             iframe_hidden)
-        elem_hidden = WebDriverWait(driver, 30).until(EC.presence_of_element_located((
+        elem_hidden = WebDriverWait(driver, 30).until(ex_cond.presence_of_element_located((
             By.XPATH, '//textarea[@id="g-recaptcha-response"]')))
         driver.execute_script(
             "arguments[0].style.display = 'inline-block';",
@@ -218,12 +242,12 @@ def solve_recaptcha(driver: webdriver.Chrome):
         driver.execute_script(f"{callback}('{key}')")
     except NoSuchElementException as ex:
         reason = "Recaptcha отсутствует"
-        secure.log.write_error_log(reason, ex)
+        secure.log.write_log(reason, ex)
         pass
     except ElementNotInteractableException as ex:
-        reason = "Элемент, с которым невозможно взаимодействовать (элемент не активен)"
-        secure.log.write_error_log(reason, ex)
-        print("Элемент, с которым невозможно взаимодействовать (элемент не активен)")
+        reason = "solve_recaptcha (элемент не активен)"
+        secure.log.write_log(reason, ex)
+        print(reason)
         pass
 
 
@@ -240,7 +264,7 @@ def fill_data(connection, driver: webdriver.Chrome, id_bd, link):
             driver.refresh()
         except NoSuchElementException as ex:
             reason = "Кнопка принять и продолжить отсутствует"
-            secure.log.write_error_log(reason, ex)
+            secure.log.write_log(reason, ex)
             pass
 
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
@@ -249,5 +273,5 @@ def fill_data(connection, driver: webdriver.Chrome, id_bd, link):
 
     except NoSuchElementException as ex:
         reason = "Элемент не найден"
-        secure.log.write_error_log(reason, ex)
+        secure.log.write_log(reason, ex)
         pass

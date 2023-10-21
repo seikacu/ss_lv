@@ -32,7 +32,7 @@ def get_start_pages():
 
 
 def window():
-    log.create_error_log()
+    log.create_log()
     get_start_pages()
 
     def clicked_get_phone():
@@ -59,7 +59,7 @@ def window():
                 print("[INFO] Selen driver closed")
             if connection:
                 connection.close()
-                print("[INFO] PostgreSQL connection closed")
+                print("[INFO] Сбор номеров телефонов заверщен")
 
     def clicked_del_table():
         delete_table()
@@ -99,7 +99,7 @@ def window():
 
     def clicked_get_data():
         cur_date = datetime.now()
-        log.write_error_log("Time start - ", cur_date.strftime("%Y-%m-%d %H-%M-%S"))
+        log.write_log("Time start - ", cur_date.strftime("%Y-%m-%d %H-%M-%S"))
         connection = None
         try:
             connection = connect_db()
@@ -117,9 +117,9 @@ def window():
         finally:
             if connection:
                 connection.close()
-                print("[INFO] PostgreSQL connection closed")
+                print("[INFO] Сбор данных завершен.")
                 cur_date = datetime.now()
-                log.write_error_log("Time end - ", cur_date.strftime("%Y-%m-%d %H-%M-%S"))
+                log.write_log("Time end - ", cur_date.strftime("%Y-%m-%d %H-%M-%S"))
 
     def selected(event):
         selection = combobox.get()
