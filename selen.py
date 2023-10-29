@@ -32,7 +32,7 @@ def get_path_profile():
     elif platform.system() == "Darwin":
         return "webdriver/chromedriver-macos/user"
     else:
-        raise Exception("Unsupported platform!")
+        raise Exception("selen_get_path_profile_Unsupported platform!")
 
 
 def get_path_webdriver():
@@ -43,7 +43,7 @@ def get_path_webdriver():
     elif platform.system() == "Darwin":
         return "webdriver/chromedriver-macos"
     else:
-        raise Exception("Unsupported platform!")
+        raise Exception("selen_get_path_webdriver_Unsupported platform!")
 
 
 def get_selenium_driver(use_proxy=False):
@@ -85,14 +85,14 @@ def extract_phone_numbers(connection, driver: webdriver.Chrome, id_db):
         add_phone1(connection, id_db, phone1)
     except NoSuchElementException as ex:
         add_phone1(connection, id_db, "снято с публикации")
-        reason = "Не удалось получить телефон"
+        reason = "selen_extract_phone_numbers_Не удалось получить телефон"
         secure.log.write_log(reason, ex)
         pass
     try:
         phone2 = driver.find_element(By.XPATH, "//span[contains(@id, 'phone_td_2')]").text
         add_phone2(connection, id_db, phone2)
     except NoSuchElementException as ex:
-        reason = "Отсутствует 2-ой телефон"
+        reason = "selen_extract_phone_numbers_Отсутствует 2-ой телефон"
         secure.log.write_log(reason, ex)
         pass
 
@@ -113,11 +113,11 @@ def solve_image_captcha(driver: webdriver.Chrome):
             "//input[contains(@value, 'Показать номер')]").click()
         time.sleep(1)
     except NoSuchElementException as ex:
-        reason = "Графическая капча не найдена"
+        reason = "selen_solve_image_captcha_Графическая капча не найдена"
         secure.log.write_log(reason, ex)
         pass
     except ElementNotInteractableException as ex:
-        reason = "solve_image_captcha (элемент не активен)"
+        reason = "selen_solve_image_captcha (элемент не активен)"
         secure.log.write_log(reason, ex)
         print(reason)
         pass
@@ -129,11 +129,11 @@ def click_i_no_robot(driver):
         recaptcha_iframe.click()
         time.sleep(1)
     except NoSuchElementException as ex:
-        reason = "click_i_no_robot Элемент Я не робот не найден"
+        reason = "selen_click_i_no_robot Элемент Я не робот не найден"
         secure.log.write_log(reason, ex)
         pass
     except ElementNotInteractableException as ex:
-        reason = "click_i_no_robot (элемент не активен)"
+        reason = "selen_click_i_no_robot (элемент не активен)"
         secure.log.write_log(reason, ex)
         print(reason)
         pass
@@ -146,21 +146,32 @@ def get_phone(connection, driver: webdriver.Chrome, id_bd):
             if show_phone.is_displayed():
                 driver.execute_script("arguments[0].click();", show_phone)
                 time.sleep(1)
+            # ДОБАВИТЬ ПРОВЕРКУ НА ВСПЛЫВАЮЩЕЕ ОКНО "Вы зашли по неверной ссылке,
+            # либо у объявления истёк срок публикации. ss.lv"
+            # Находим элемент с id "alert_msg" и получаем его текст
+            alert = driver.find_element(By.ID, "alert_msg").text
+            if 'Вы зашли по неверной ссылке' in alert:
+                print("ПОПАЛСЯ!!!))))")
+                # !!!Добавить смену прокси и обноление страницы!!!
+                pass
+
         except NoSuchElementException as ex:
-            reason = "Кнопка Показать номер телефона отсутствует, и/или объявление снято с публикации"
+            reason = "selen_get_phone_ Кнопка Показать номер телефона отсутствует, и/или объявление снято с публикации"
             secure.log.write_log(reason, ex)
             print(reason)
-        solve_image_captcha(driver)
-        click_i_no_robot(driver)
-        solve_recaptcha(driver)
+            pass
+        # solve_image_captcha(driver)
+        # click_i_no_robot(driver)
+        # solve_recaptcha(driver)
         time.sleep(1)
         if extract_phone_numbers(connection, driver, id_bd) is False:
             driver.refresh()
             get_phone(connection, driver, id_bd)
     except NoSuchElementException as ex:
-        reason = "Элемент не найден"
+        reason = "selen_get_phone_Элемент не найден"
         secure.log.write_log(reason, ex)
         print(ex)
+        pass
 
 
 def solve_recaptcha(driver: webdriver.Chrome):
@@ -241,11 +252,11 @@ def solve_recaptcha(driver: webdriver.Chrome):
         elem_hidden.send_keys(result)
         driver.execute_script(f"{callback}('{key}')")
     except NoSuchElementException as ex:
-        reason = "Recaptcha отсутствует"
+        reason = "selen_solve_recaptcha_ Recaptcha отсутствует"
         secure.log.write_log(reason, ex)
         pass
     except ElementNotInteractableException as ex:
-        reason = "solve_recaptcha (элемент не активен)"
+        reason = "selen_solve_recaptcha_ (элемент не активен)"
         secure.log.write_log(reason, ex)
         print(reason)
         pass
@@ -263,7 +274,7 @@ def fill_data(connection, driver: webdriver.Chrome, id_bd, link):
             accept_button.click()
             driver.refresh()
         except NoSuchElementException as ex:
-            reason = "Кнопка принять и продолжить отсутствует"
+            reason = "selen_fill_data_Кнопка принять и продолжить отсутствует"
             secure.log.write_log(reason, ex)
             pass
 
@@ -272,6 +283,6 @@ def fill_data(connection, driver: webdriver.Chrome, id_bd, link):
         get_phone(connection, driver, id_bd)
 
     except NoSuchElementException as ex:
-        reason = "Элемент не найден"
+        reason = "selen_fill_data_Элемент не найден"
         secure.log.write_log(reason, ex)
         pass

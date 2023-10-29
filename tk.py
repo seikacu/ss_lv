@@ -44,15 +44,22 @@ def window():
 
             data = get_data_from_table(connection, get_category_name())
             driver = get_selenium_driver(use_proxy=True)
-            for row in data:
-                id_bd = row[0]
-                url = row[1]
+            for row in range(len(data)):
+                sel = data[row]
+                id_bd = sel[0]  # row[0]
+                url = sel[1]  # row[1]
 
                 fill_data(connection, driver, id_bd, url)
 
+        except IndexError as ierr:
+            print("YAAAAAAAA")
+            log.write_log("IndexError", ierr)
+            log.write_log("IndexError. data = ", data)
+            log.write_log(f"IndexError. sel = {sel}, id_bd = {id_bd}, url = {url}, row = {row}. ", "INDEX ERROR END")
         except Exception as _ex:
-            print("Error while working with PostgreSQL", _ex)
-            log.write_log("clicked_get_phone _ Error while working with PostgreSQL", _ex)
+            print("tk_clicked_get_phone_ Error while working with PostgreSQL", _ex)
+            log.write_log("tk_clicked_get_phone_ Error while working with PostgreSQL", _ex)
+            pass
         finally:
             if driver:
                 driver.close()
@@ -114,8 +121,9 @@ def window():
 
             get_data(link, get_category_name(), selection, update_progress, connection)
         except Exception as _ex:
-            print("Error while working with PostgreSQL", _ex)
-            log.write_log("clicked_get_data _ Error while working with PostgreSQL", _ex)
+            print("tk_clicked_get_data_ Error while working with PostgreSQL", _ex)
+            log.write_log("tk_clicked_get_data _Error while working with PostgreSQL", _ex)
+            pass
         finally:
             if connection:
                 connection.close()
@@ -167,6 +175,5 @@ def window():
 
     bar = Progressbar(win, length=200, mode='determinate')
     bar.grid(column=0, row=110, padx=10, pady=15)
-
 
     win.mainloop()
