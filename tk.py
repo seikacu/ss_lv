@@ -11,6 +11,8 @@ from db_sql import (connect_db, get_data_to_csv_file, delete_table, delete_data_
                     create_table_ads, get_data_from_table)
 from selen import fill_data, get_selenium_driver
 
+GLOB_ID = 0
+
 
 def get_start_pages():
     url = "https://www.ss.lv/ru/"
@@ -43,19 +45,18 @@ def window():
             connection.autocommit = True
 
             data = get_data_from_table(connection, get_category_name())
-            driver = get_selenium_driver(use_proxy=True)
+            driver = get_selenium_driver(True, GLOB_ID)
             for row in range(len(data)):
                 sel = data[row]
                 id_bd = sel[0]  # row[0]
                 url = sel[1]  # row[1]
-
                 fill_data(connection, driver, id_bd, url)
 
         except IndexError as ierr:
             print("YAAAAAAAA")
             log.write_log("IndexError", ierr)
-            log.write_log("IndexError. data = ", data)
-            log.write_log(f"IndexError. sel = {sel}, id_bd = {id_bd}, url = {url}, row = {row}. ", "INDEX ERROR END")
+            # log.write_log("IndexError. data = ", data)
+            # log.write_log(f"IndexError. sel = {sel}, id_bd = {id_bd}, url = {url}, row = {row}. ", "INDEX ERROR END")
         except Exception as _ex:
             print("tk_clicked_get_phone_ Error while working with PostgreSQL", _ex)
             log.write_log("tk_clicked_get_phone_ Error while working with PostgreSQL", _ex)
@@ -86,7 +87,7 @@ def window():
         cur_date_str = cur_date.strftime("%Y-%m-%d %H-%M-%S")
         name_csv = f"{get_category_name()}_{cur_date_str}"
         with open(f"result/{name_csv}.csv", "w", newline='', encoding="utf-8") as file:
-            writer = csv.writer(file)
+            writer = csv.writer(file, delimiter='\t')
             writer.writerow(
                 (
                     "id",
@@ -139,7 +140,7 @@ def window():
         bar['value'] = progress * 100
 
     win = tkinter.Tk()
-    win.geometry('350x450')
+    win.geometry('350x500')
     win.title("Парсер сайта объявлений ss.lv")
 
     lbl = tkinter.Label(

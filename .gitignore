@@ -161,7 +161,7 @@ cython_debug/
 
 data
 result
-
+trash
 secure.py
 proxy_auth_plugin.zip
 captcha.png

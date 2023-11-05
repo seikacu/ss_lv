@@ -105,7 +105,7 @@ def get_data_to_csv_file(name_csv):
             cursor.execute(sql)
             rows = cursor.fetchall()
             with open(f"result/{name_csv}.csv", "a", newline='', encoding="utf-8") as file:
-                writer = csv.writer(file)
+                writer = csv.writer(file, delimiter='\t')
                 writer.writerows(rows)
     except Exception as _ex:
         log.write_log("db_sql_get_data_to_csv_file ", _ex)

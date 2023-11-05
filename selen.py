@@ -12,8 +12,10 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.support import expected_conditions as ex_cond
 
 from selenium.webdriver.support.ui import WebDriverWait
+from webdriver_manager.chrome import ChromeDriverManager
 
 import secure
+import tk
 from db_sql import add_phone1, add_phone2
 
 
@@ -35,18 +37,7 @@ def get_path_profile():
         raise Exception("selen_get_path_profile_Unsupported platform!")
 
 
-def get_path_webdriver():
-    if platform.system() == "Windows":
-        return r"C:\WebDriver\chromedriver\chromedriver.exe"
-    elif platform.system() == "Linux":
-        return "/home/seikacu/webdriver//chromedriver"
-    elif platform.system() == "Darwin":
-        return "webdriver/chromedriver-macos"
-    else:
-        raise Exception("selen_get_path_webdriver_Unsupported platform!")
-
-
-def get_selenium_driver(use_proxy=False):
+def get_selenium_driver(use_proxy, num_proxy):
     options = webdriver.ChromeOptions()
     set_driver_options(options)
 
@@ -57,8 +48,8 @@ def get_selenium_driver(use_proxy=False):
         plugin_file = 'proxy_auth_plugin.zip'
 
         with zipfile.ZipFile(plugin_file, 'w') as zp:
-            zp.writestr('manifest.json', secure.manifest_json_1)
-            zp.writestr('background.js', secure.background_js_1)
+            zp.writestr('manifest.json', secure.get_proxy_pref(num_proxy, 0))
+            zp.writestr('background.js', secure.get_proxy_pref(num_proxy, 1))
 
         options.add_extension(plugin_file)
 
@@ -69,9 +60,7 @@ def get_selenium_driver(use_proxy=False):
     caps = DesiredCapabilities().CHROME
     caps['pageLoadStrategy'] = 'eager'
 
-    service = Service(
-        desired_capabilities=caps,
-        executable_path=get_path_webdriver())
+    service = Service(ChromeDriverManager().install(), desired_capabilities=caps)
     driver = webdriver.Chrome(service=service, options=options)
 
     return driver
@@ -146,23 +135,30 @@ def get_phone(connection, driver: webdriver.Chrome, id_bd):
             if show_phone.is_displayed():
                 driver.execute_script("arguments[0].click();", show_phone)
                 time.sleep(1)
-            # ДОБАВИТЬ ПРОВЕРКУ НА ВСПЛЫВАЮЩЕЕ ОКНО "Вы зашли по неверной ссылке,
+            # ПРОВЕРКА НА ВСПЛЫВАЮЩЕЕ ОКНО "Вы зашли по неверной ссылке,
             # либо у объявления истёк срок публикации. ss.lv"
-            # Находим элемент с id "alert_msg" и получаем его текст
             alert = driver.find_element(By.ID, "alert_msg").text
             if 'Вы зашли по неверной ссылке' in alert:
-                print("ПОПАЛСЯ!!!))))")
-                # !!!Добавить смену прокси и обноление страницы!!!
-                pass
+                link = driver.current_url
+                if tk.GLOB_ID < 4:
+                    tk.GLOB_ID += 1
+                else:
+                    tk.GLOB_ID = 0
+                if driver:
+                    driver.close()
+                    driver.quit()
+                # Меняем прокси
+                driver = get_selenium_driver(True, tk.GLOB_ID)
+                fill_data(connection, driver, id_bd, link)
 
         except NoSuchElementException as ex:
             reason = "selen_get_phone_ Кнопка Показать номер телефона отсутствует, и/или объявление снято с публикации"
             secure.log.write_log(reason, ex)
             print(reason)
             pass
-        # solve_image_captcha(driver)
-        # click_i_no_robot(driver)
-        # solve_recaptcha(driver)
+        solve_image_captcha(driver)
+        click_i_no_robot(driver)
+        solve_recaptcha(driver)
         time.sleep(1)
         if extract_phone_numbers(connection, driver, id_bd) is False:
             driver.refresh()

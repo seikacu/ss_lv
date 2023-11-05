@@ -38,7 +38,6 @@ def get_data(link, launch_point, selection, progress_callback, connection, prev_
     if len(link_split) > 4:
         if prev_link not in link:
             log.write_log("Исключаем перекрестную ссылку в категории - ", link)
-            # print(link)
             return
         elif "exchange" in link:
             log.write_log("exchange - ", link)
