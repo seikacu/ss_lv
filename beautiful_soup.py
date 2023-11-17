@@ -9,7 +9,7 @@ import requests
 from bs4 import BeautifulSoup
 from tqdm import tqdm
 
-from secure import log
+from secure import log, proxy, prox
 from db_sql import check_url_in_bd, insert_to_table
 
 
@@ -98,7 +98,7 @@ def get_soup(mode, url, url_split):
 
     if not file_name.endswith(".html"):
         file_name += ".html"
-    r = requests.get(url=url, headers=headers, allow_redirects=False)
+    r = requests.get(url=url, headers=headers, allow_redirects=False, proxies=proxy)
     if not os.path.exists("data"):
         os.mkdir("data")
     with open(f"data/{file_name}", "w", encoding="utf-8") as file:
@@ -143,7 +143,7 @@ async def get_page_data(session, link, launch_point, selection, connection):
     }
     url = f"https://www.ss.lv{link}"
     try:
-        async with (session.get(url=url, headers=headers, allow_redirects=False) as response):
+        async with (session.get(url=url, headers=headers, allow_redirects=False, proxy=prox) as response):
             response_text = await response.text()
             url_split = link.split("/")
             file_name = url_split[len(url_split) - 1]
@@ -177,15 +177,15 @@ async def get_page_data(session, link, launch_point, selection, connection):
             if find_location is not None:
                 location = find_location.find_next_sibling('td').text
 
-            insert_to_table(connection, url, category, sub_category_1, sub_category_2, sub_category_3,
-                            sub_category_4, sub_category_5, location, launch_point)
+            await insert_to_table(connection, url, category, sub_category_1, sub_category_2, sub_category_3,
+                                  sub_category_4, sub_category_5, location, launch_point)
     except AttributeError as AE:
         log.write_log("get_page_data ", AE)
         print(AE)
 
 
 async def gather_data(launch_point, selection, soup, connection):
-    async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(), trust_env=True) as session:  # trust_env=True
+    async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(), trust_env=True) as session:
         tasks = []
         div_d1_tags = soup.find_all('div', {'class': 'd1'})
         for div_tag in div_d1_tags:

@@ -35,8 +35,8 @@ def create_table_ads(connection):
                     sub_category_4 varchar(100),
                     sub_category_5 varchar(100),
                     location varchar(50) NOT NULL,
-                    phone_1 varchar(20),
-                    phone_2 varchar(20),
+                    phone_1 varchar(50),
+                    phone_2 varchar(50),
                     launch_point varchar(50) NOT NULL,
                     CONSTRAINT "ads_pk" PRIMARY KEY ("id","url")
                     ) WITH (
@@ -52,8 +52,8 @@ def create_table_ads(connection):
         pass
 
 
-def insert_to_table(connection, url, category, sub_category_1, sub_category_2, sub_category_3, sub_category_4,
-                    sub_category_5, location, launch_point):
+async def insert_to_table(connection, url, category, sub_category_1, sub_category_2, sub_category_3, sub_category_4,
+                          sub_category_5, location, launch_point):
     try:
         with connection.cursor() as cursor:
             cursor.execute(
@@ -74,8 +74,8 @@ def add_phone1(connection, id_db, phone):
         with connection.cursor() as cursor:
             cursor.execute(f"""UPDATE ads SET phone_1 = '{phone}' WHERE id = {id_db};""")
 
-            print(f"[INFO] Phone_1 {phone} was successfully add")
-
+            print(f"[INFO] Phone_1 {phone} was successfully add, id = {id_db}")
+            log.write_log(f"Phone_1 {phone} was successfully add", f"id = {id_db}")
     except Exception as _ex:
         log.write_log("db_sql_add_phone1 ", _ex)
         print("db_sql__add_phone1 Error while working with PostgreSQL", _ex)
@@ -88,6 +88,7 @@ def add_phone2(connection, id_db, phone):
             cursor.execute(f"""UPDATE ads SET phone_2 = '{phone}' WHERE id = {id_db};""")
 
             print(f"[INFO] Phone_2 {phone} was successfully add")
+            log.write_log(f"Phone_2 {phone} was successfully add", f"id = {id_db}")
 
     except Exception as _ex:
         log.write_log("db_sql_add_phone2 ", _ex)

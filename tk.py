@@ -12,6 +12,8 @@ from db_sql import (connect_db, get_data_to_csv_file, delete_table, delete_data_
 from selen import fill_data, get_selenium_driver
 
 GLOB_ID = 0
+COUNT = 0
+PORT = 51000
 
 
 def get_start_pages():
@@ -45,22 +47,19 @@ def window():
             connection.autocommit = True
 
             data = get_data_from_table(connection, get_category_name())
-            driver = get_selenium_driver(True, GLOB_ID)
-            for row in range(len(data)):
-                sel = data[row]
-                id_bd = sel[0]  # row[0]
-                url = sel[1]  # row[1]
+            driver = get_selenium_driver(True, GLOB_ID, PORT)
+
+            pass
+            for row in data:
+                id_bd = row[0]
+                url = row[1]
                 fill_data(connection, driver, id_bd, url)
 
-        except IndexError as ierr:
-            print("YAAAAAAAA")
-            log.write_log("IndexError", ierr)
-            # log.write_log("IndexError. data = ", data)
-            # log.write_log(f"IndexError. sel = {sel}, id_bd = {id_bd}, url = {url}, row = {row}. ", "INDEX ERROR END")
         except Exception as _ex:
             print("tk_clicked_get_phone_ Error while working with PostgreSQL", _ex)
             log.write_log("tk_clicked_get_phone_ Error while working with PostgreSQL", _ex)
             pass
+
         finally:
             if driver:
                 driver.close()
