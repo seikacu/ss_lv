@@ -1,3 +1,4 @@
+import threading
 import time
 import zipfile
 
@@ -10,7 +11,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-from selenium.webdriver.support import expected_conditions as ex_cond, expected_conditions
+from selenium.webdriver.support import expected_conditions as ex_cond
 from fake_useragent import UserAgent
 
 from selenium.webdriver.support.ui import WebDriverWait
@@ -23,16 +24,15 @@ from db_sql import add_phone1, add_phone2
 
 def set_driver_options(options):
     # безголовый режим браузера
-    # options.add_argument('--headless=new')
+    options.add_argument('--headless=new')
     options.add_argument("--disable-infobars")
     options.add_argument("--disable-notifications")
     options.add_argument('--ignore-certificate-errors')
     options.add_argument('--ignore-ssl-errors')
     options.add_argument("--disable-blink-features=AutomationControlled")
-    # options.add_experimental_option("debuggerAddress", "127.0.0.1:50001")
 
 
-def get_selenium_driver(use_proxy, num_proxy, port):
+def get_selenium_driver(use_proxy, num_proxy):
     ua = UserAgent()
     options = webdriver.ChromeOptions()
     set_driver_options(options)
@@ -55,7 +55,6 @@ def get_selenium_driver(use_proxy, num_proxy, port):
     caps['pageLoadStrategy'] = 'normal'
 
     service = Service(ChromeDriverManager().install(), desired_capabilities=caps)
-    service.port = port
     driver = webdriver.Chrome(service=service, options=options)
 
     return driver
@@ -136,29 +135,19 @@ def get_phone(connection, driver: webdriver.Chrome, id_bd):
             try:
                 # ПРОВЕРКА НА ВСПЛЫВАЮЩЕЕ ОКНО "Вы зашли по неверной ссылке,
                 # либо у объявления истёк срок публикации. ss.lv"
-                # alert = driver.find_element(By.ID, "alert_msg")
-                # if alert:
-                #     alert_txt = alert.text
-                #     if 'Вы зашли по неверной ссылке' in alert_txt:
-                if tk.COUNT == 3:
-                    link = driver.current_url
-                    print('ОЧИСТКА КЕША ПО ALERT')
-                    secure.log.write_log("ОЧИCТКА КЕША ПО ALERT", 'Новый экземпляр webdriver')
-                    # if tk.GLOB_ID < 1:
-                    #     tk.GLOB_ID += 1
-                    # else:
-                    #     tk.GLOB_ID = 0
-                    print('СМЕНА PROXY')
-                    secure.log.write_log("СМЕНА PROXY: ", f'new tk.GLOB_ID: {tk.GLOB_ID}')
-                    if driver:
-                        driver.close()
-                        driver.quit()
-                    time.sleep(30)
-                    tk.PORT += 1
-                    driver = get_selenium_driver(True, tk.GLOB_ID, tk.PORT)
-                    # time.sleep(300)
-                    tk.COUNT = 0
-                    fill_data(connection, driver, id_bd, link)
+                alert = driver.find_element(By.ID, "alert_msg")
+                if alert:
+                    alert_txt = alert.text
+                    if 'Вы зашли по неверной ссылке' in alert_txt:
+                        link = driver.current_url
+                        if tk.GLOB_ID < 1:
+                            tk.GLOB_ID += 1
+                        else:
+                            tk.GLOB_ID = 0
+                        print('СМЕНА PROXY ПО ALERT')
+                        secure.log.write_log("СМЕНА PROXY ПО ALERT: ", f'new tk.GLOB_ID: {tk.GLOB_ID}')
+                        time.sleep(600)
+                        fill_data(connection, id_bd, link)
             except NoSuchElementException:
                 reason = "selen_get_phone_ Верная ссылка - объявление актуально"
                 secure.log.write_log(reason, '')
@@ -174,11 +163,11 @@ def get_phone(connection, driver: webdriver.Chrome, id_bd):
             secure.log.write_log(reason, f'Номер id в БД: {id_bd}')
             pass
         time.sleep(1)
+
         solve_image_captcha(driver)
         check_alert(connection, driver, id_bd)
         solve_recaptcha(driver)
         time.sleep(2)
-        tk.COUNT += 1
         if extract_phone_numbers(connection, driver, id_bd) is False:
             print("ПОВТОР ПОЛУЧЕНИЯ НОМЕРА")
             secure.log.write_log("ПОВТОР ПОЛУЧЕНИЯ НОМЕРА", f'Запись в БД: {id_bd}')
@@ -309,7 +298,7 @@ def check_alert(connection, driver, id_bd):
         print(alert_txt)
         alert.accept()
         time.sleep(60)
-        fill_data(connection, driver, id_bd, driver.current_url)
+        fill_data(connection, id_bd, driver.current_url)
     except TimeoutException:
         pass
     except NoSuchElementException as ex:
@@ -322,8 +311,11 @@ def check_alert(connection, driver, id_bd):
         pass
 
 
-def fill_data(connection, driver: webdriver.Chrome, id_bd, link):
+def fill_data(connection, id_bd, link):
+    driver = None
     try:
+        driver = get_selenium_driver(True, tk.GLOB_ID)
+
         driver.get(link)
 
         # Кнопка Принять и продолжить
@@ -347,8 +339,14 @@ def fill_data(connection, driver: webdriver.Chrome, id_bd, link):
         secure.log.write_log(reason, ex)
         pass
     except WebDriverException as ex:
+        print(ex)
         change_proxy(connection, driver, ex, id_bd)
         pass
+    finally:
+        if driver:
+            driver.close()
+            driver.quit()
+            print("[INFO] Selen driver closed")
 
 
 def change_proxy(connection, driver, ex, id_bd):
@@ -361,7 +359,17 @@ def change_proxy(connection, driver, ex, id_bd):
         tk.GLOB_ID = 0
     print('СМЕНА PROXY')
     secure.log.write_log("СМЕНА PROXY: ", f'new tk.GLOB_ID: {tk.GLOB_ID}')
-    driver = get_selenium_driver(True, tk.GLOB_ID, tk.PORT)
-    time.sleep(300)
-    tk.COUNT = 0
-    fill_data(connection, driver, id_bd, link)
+    time.sleep(600)
+    fill_data(connection, id_bd, link)
+
+
+def multi_selen(step, connection, ids, urls):
+
+    threads = []
+    for i in range(0, step):
+        thread = threading.Thread(target=fill_data, args=(connection, ids[i], urls[i],))
+        threads.append(thread)
+        thread.start()
+
+    for thread in threads:
+        thread.join()

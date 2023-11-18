@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="c8eef76b-bf62-48c4-8696-1e7161086e3f" name="Changes" comment="fixing">
+      <change beforePath="$PROJECT_DIR$/selen.py" beforeDir="false" afterPath="$PROJECT_DIR$/selen.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tk.py" beforeDir="false" afterPath="$PROJECT_DIR$/tk.py" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 0
+}</component>
+  <component name="ProjectId" id="2Y9JXxNaBiazNSwBUvpcPl4sI4h" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;main&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/seikacu/ext/dev/drug_price_parser&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  },
+  &quot;keyToStringList&quot;: {
+    &quot;DatabaseDriversLRU&quot;: [
+      &quot;postgresql&quot;
+    ]
+  }
+}</component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="c8eef76b-bf62-48c4-8696-1e7161086e3f" name="Changes" comment="" />
+      <created>1699931904414</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1699931904414</updated>
+      <workItem from="1699931905609" duration="2705000" />
+      <workItem from="1699936889429" duration="23059000" />
+      <workItem from="1699976057435" duration="9738000" />
+      <workItem from="1699989918359" duration="151000" />
+      <workItem from="1700018846139" duration="2162000" />
+      <workItem from="1700023332866" duration="17453000" />
+      <workItem from="1700071276022" duration="794000" />
+      <workItem from="1700072110809" duration="47000" />
+      <workItem from="1700072577065" duration="311000" />
+      <workItem from="1700102323061" duration="3330000" />
+      <workItem from="1700106961613" duration="278000" />
+      <workItem from="1700109913203" duration="842000" />
+      <workItem from="1700114147543" duration="130000" />
+      <workItem from="1700122149610" duration="3984000" />
+      <workItem from="1700126648849" duration="10895000" />
+      <workItem from="1700146730201" duration="327000" />
+      <workItem from="1700154615313" duration="2788000" />
+      <workItem from="1700189029104" duration="4455000" />
+      <workItem from="1700196151774" duration="629000" />
+      <workItem from="1700215420410" duration="5058000" />
+      <workItem from="1700232180097" duration="6713000" />
+      <workItem from="1700241615708" duration="3132000" />
+      <workItem from="1700291610142" duration="3645000" />
+      <workItem from="1700296626100" duration="782000" />
+      <workItem from="1700300756682" duration="113000" />
+      <workItem from="1700301832992" duration="985000" />
+      <workItem from="1700302973026" duration="2178000" />
+    </task>
+    <task id="LOCAL-00001" summary="fixing">
+      <option name="closed" value="true" />
+      <created>1700222496604</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1700222496604</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="fixing" />
+    <option name="LAST_COMMIT_MESSAGE" value="fixing" />
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/ss_lv$main.coverage" NAME="main Coverage Results" MODIFIED="1700302405064" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/ss_lv$selen.coverage" NAME="selen Coverage Results" MODIFIED="1700241965432" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/ss_lv$tk.coverage" NAME="tk Coverage Results" MODIFIED="1700300776710" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/ss_lv$beautiful_soup.coverage" NAME="beautiful_soup Coverage Results" MODIFIED="1699976691495" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+  </component>
+</project>

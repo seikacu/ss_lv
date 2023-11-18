@@ -1,5 +1,6 @@
 import csv
 import json
+import os
 
 from datetime import datetime
 import tkinter
@@ -9,11 +10,9 @@ from secure import log
 from beautiful_soup import get_category, get_data, href, get_soup
 from db_sql import (connect_db, get_data_to_csv_file, delete_table, delete_data_from_table, check_exist_table,
                     create_table_ads, get_data_from_table)
-from selen import fill_data, get_selenium_driver
+from selen import multi_selen
 
 GLOB_ID = 0
-COUNT = 0
-PORT = 51000
 
 
 def get_start_pages():
@@ -41,30 +40,40 @@ def window():
 
     def clicked_get_phone():
         connection = None
-        driver = None
         try:
             connection = connect_db()
             connection.autocommit = True
 
             data = get_data_from_table(connection, get_category_name())
-            driver = get_selenium_driver(True, GLOB_ID, PORT)
 
-            pass
-            for row in data:
-                id_bd = row[0]
-                url = row[1]
-                fill_data(connection, driver, id_bd, url)
+            step = 0
+            data_len = len(data)
+            if data_len > 9:
+                for j in range(10, 19):
+                    if data_len % j == 0:
+                        step = j
+                        break
+            elif data_len < 10:
+                for j in range(1, 9):
+                    if data_len % j == 0:
+                        step = j
+                        break
+
+            for row in range(0, data_len, step):
+                ids = []
+                urls = []
+                batch = data[row:row + step]
+                for i in batch:
+                    ids.append(i[0])
+                    urls.append(i[1])
+
+                multi_selen(step, connection, ids, urls)
 
         except Exception as _ex:
             print("tk_clicked_get_phone_ Error while working with PostgreSQL", _ex)
             log.write_log("tk_clicked_get_phone_ Error while working with PostgreSQL", _ex)
             pass
-
         finally:
-            if driver:
-                driver.close()
-                driver.quit()
-                print("[INFO] Selen driver closed")
             if connection:
                 connection.close()
                 print("[INFO] Сбор номеров телефонов заверщен")
@@ -74,6 +83,15 @@ def window():
 
     def clicked_del_data_by_cat():
         delete_data_from_table(get_category_name())
+
+    def del_cache():
+        folder_path = 'data'
+        files = os.listdir(folder_path)
+        html_files = [file for file in files if file.endswith('.html')]
+        for html_file in html_files:
+            file_path = os.path.join(folder_path, html_file)
+            os.remove(file_path)
+        print(f"Удалено {len(html_files)} файлов в папке {folder_path}")
 
     def get_category_name():
         selection = combobox.get()
@@ -139,7 +157,7 @@ def window():
         bar['value'] = progress * 100
 
     win = tkinter.Tk()
-    win.geometry('350x500')
+    win.geometry('350x600')
     win.title("Парсер сайта объявлений ss.lv")
 
     lbl = tkinter.Label(
@@ -173,7 +191,10 @@ def window():
     btn = tkinter.Button(win, text="5 - !!! УДАЛИТЬ ТАБЛИЦУ С ДАННЫМИ в БД !!!", command=clicked_del_table)
     btn.grid(column=0, row=100, padx=10, pady=15)
 
+    btn = tkinter.Button(win, text="6 - Очистить кэш", command=del_cache)
+    btn.grid(column=0, row=110, padx=10, pady=15)
+
     bar = Progressbar(win, length=200, mode='determinate')
-    bar.grid(column=0, row=110, padx=10, pady=15)
+    bar.grid(column=0, row=120, padx=10, pady=15)
 
     win.mainloop()
