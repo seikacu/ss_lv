@@ -10,7 +10,7 @@ from secure import log
 from beautiful_soup import get_category, get_data, href, get_soup
 from db_sql import (connect_db, get_data_to_csv_file, delete_table, delete_data_from_table, check_exist_table,
                     create_table_ads, get_data_from_table)
-from selen import multi_selen
+from selen import multi_selen, fill_data
 
 GLOB_ID = 0
 
@@ -38,7 +38,7 @@ def window():
     log.create_log()
     get_start_pages()
 
-    def clicked_get_phone():
+    def get_phones_multithread():
         connection = None
         try:
             connection = connect_db()
@@ -49,10 +49,15 @@ def window():
             step = 0
             data_len = len(data)
             if data_len > 9:
-                for j in range(10, 19):
+                for j in range(10, 20):
                     if data_len % j == 0:
                         step = j
                         break
+                for j in range(9, 1, -1):
+                    if data_len % j == 0:
+                        step = j
+                        break
+
             elif data_len < 10:
                 for j in range(1, 9):
                     if data_len % j == 0:
@@ -66,12 +71,32 @@ def window():
                 for i in batch:
                     ids.append(i[0])
                     urls.append(i[1])
-
+                print(f'Будет запущено {step} параллельных потоков')
                 multi_selen(step, connection, ids, urls)
 
         except Exception as _ex:
-            print("tk_clicked_get_phone_ Error while working with PostgreSQL", _ex)
-            log.write_log("tk_clicked_get_phone_ Error while working with PostgreSQL", _ex)
+            print("tk_get_phones_multithread_ Error while working with PostgreSQL", _ex)
+            log.write_log("tk_get_phones_multithread_ Error while working with PostgreSQL", _ex)
+            pass
+        finally:
+            if connection:
+                connection.close()
+                print("[INFO] Сбор номеров телефонов заверщен")
+
+    def get_phones_single():
+        connection = None
+        try:
+            connection = connect_db()
+            connection.autocommit = True
+
+            data = get_data_from_table(connection, get_category_name())
+
+            for row in data:
+                fill_data(connection, row[0], row[1])
+
+        except Exception as _ex:
+            print("tk_get_phones_single_ Error while working with PostgreSQL", _ex)
+            log.write_log("tk_get_phones_single_ Error while working with PostgreSQL", _ex)
             pass
         finally:
             if connection:
@@ -157,7 +182,7 @@ def window():
         bar['value'] = progress * 100
 
     win = tkinter.Tk()
-    win.geometry('350x600')
+    win.geometry('400x650')
     win.title("Парсер сайта объявлений ss.lv")
 
     lbl = tkinter.Label(
@@ -179,8 +204,13 @@ def window():
     btn = tkinter.Button(win, text="1 - Запустить сбор ссылок по категории", command=clicked_get_data)
     btn.grid(column=0, row=30, padx=10, pady=15)
 
-    btn = tkinter.Button(win, text="2 - Заполнить номер телефона по категории", command=clicked_get_phone)
+    btn = tkinter.Button(win, text="2.1 - Заполнить номер телефона по категории"
+                                   "\n(Многопоточный режим)", command=get_phones_multithread)
     btn.grid(column=0, row=70, padx=10, pady=15)
+
+    btn = tkinter.Button(win, text="2.2 - Заполнить номер телефона по категории"
+                                   "\n(Однопоточный режим)", command=get_phones_single)
+    btn.grid(column=0, row=75, padx=10, pady=15)
 
     btn = tkinter.Button(win, text="3 - Выгрузить данные в таблицу по категории", command=clicked_get_csv)
     btn.grid(column=0, row=80, padx=10, pady=15)
