@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="c8eef76b-bf62-48c4-8696-1e7161086e3f" name="Changes" comment="Release 1.0">
+    <list default="true" id="c8eef76b-bf62-48c4-8696-1e7161086e3f" name="Changes" comment="fix">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/tk.py" beforeDir="false" afterPath="$PROJECT_DIR$/tk.py" afterDir="false" />
     </list>
@@ -41,7 +41,7 @@
     &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
     &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
     &quot;git-widget-placeholder&quot;: &quot;main&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/home/seikacu/ext/dev/async_download_img&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/seikacu/ext/dev/ss_lv&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
@@ -93,7 +93,15 @@
       <workItem from="1700375111943" duration="9343000" />
       <workItem from="1700421034383" duration="387000" />
       <workItem from="1700448151955" duration="2220000" />
-      <workItem from="1700459118184" duration="169000" />
+      <workItem from="1700459118184" duration="219000" />
+      <workItem from="1700477719900" duration="677000" />
+      <workItem from="1700583672596" duration="26000" />
+      <workItem from="1700584036309" duration="24000" />
+      <workItem from="1700621564140" duration="943000" />
+      <workItem from="1700651091602" duration="2339000" />
+      <workItem from="1700665525268" duration="1614000" />
+      <workItem from="1700679927586" duration="652000" />
+      <workItem from="1700814829370" duration="981000" />
     </task>
     <task id="LOCAL-00001" summary="fixing">
       <option name="closed" value="true" />
@@ -111,7 +119,15 @@
       <option name="project" value="LOCAL" />
       <updated>1700306999259</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="fix">
+      <option name="closed" value="true" />
+      <created>1700459308859</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1700459308859</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -120,12 +136,13 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="fixing" />
     <MESSAGE value="Release 1.0" />
-    <option name="LAST_COMMIT_MESSAGE" value="Release 1.0" />
+    <MESSAGE value="fix" />
+    <option name="LAST_COMMIT_MESSAGE" value="fix" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/ss_lv$main.coverage" NAME="main Coverage Results" MODIFIED="1700450093851" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/ss_lv$main.coverage" NAME="main Coverage Results" MODIFIED="1700815665203" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/ss_lv$selen.coverage" NAME="selen Coverage Results" MODIFIED="1700241965432" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/ss_lv$tk.coverage" NAME="tk Coverage Results" MODIFIED="1700448956084" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/ss_lv$tk.coverage" NAME="tk Coverage Results" MODIFIED="1700815499065" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/ss_lv$beautiful_soup.coverage" NAME="beautiful_soup Coverage Results" MODIFIED="1699976691495" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

@@ -46,24 +46,23 @@ def window():
 
             data = get_data_from_table(connection, get_category_name())
 
-            step = 0
+            step = 15
             data_len = len(data)
-            if data_len > 9:
-                for j in range(10, 20):
-                    if data_len % j == 0:
-                        step = j
-                        break
-                for j in range(9, 1, -1):
-                    if data_len % j == 0:
-                        step = j
-                        break
-
-            elif data_len < 10:
-                for j in range(1, 9):
-                    if data_len % j == 0:
-                        step = j
-                        break
-
+            # if data_len > 9:
+            #     for j in range(10, 20):
+            #         if data_len % j == 0:
+            #             step = j
+            #             break
+            #     for j in range(9, 1, -1):
+            #         if data_len % j == 0:
+            #             step = j
+            #             break
+            #
+            # elif data_len < 10:
+            # for j in range(15, 1, -1):
+            #     if data_len % j == 0:
+            #         step = j
+            #         break
             for row in range(0, data_len, step):
                 ids = []
                 urls = []
@@ -71,6 +70,7 @@ def window():
                 for i in batch:
                     ids.append(i[0])
                     urls.append(i[1])
+                step = len(batch)
                 print(f'Будет запущено {step} параллельных потоков')
                 multi_selen(step, connection, ids, urls)
 
